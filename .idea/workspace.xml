@@ -5,23 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blue.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/debug_filtered_contours.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/debug_mask.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/image.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/minimap_detected.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/minimap_extracted.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/noise.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/MinimapExtractor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/resources/image.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/walls.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/MinimapExtractor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/MinimapExtractor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,22 +74,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1742762581965</updated>
-      <workItem from="1742762582942" duration="5231000" />
+      <workItem from="1742762582942" duration="8353000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/charliebaird/MinimapExtractor.java</url>
-          <line>60</line>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
