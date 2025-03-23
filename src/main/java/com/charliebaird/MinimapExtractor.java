@@ -32,7 +32,7 @@ public class MinimapExtractor {
 
         Mat kernel;
 
-        kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 4));
+        kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
         Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
 
         Imgcodecs.imwrite("blue.png", mask);
@@ -44,9 +44,6 @@ public class MinimapExtractor {
 
         Imgcodecs.imwrite("hierarchy.png", mask);
 
-//        // Draw all contours with area >= 100 on a copy of the original image
-        Mat clone = original.clone();
-
         List<MatOfPoint> filteredContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             if (Imgproc.contourArea(contour) >= 10) {
@@ -54,7 +51,74 @@ public class MinimapExtractor {
             }
         }
 
-        Imgproc.drawContours(clone, filteredContours, -1, new Scalar(255, 140, 140), -1);
+        Mat clone = original.clone();
+
+        List<ContourEdge> edges = new ArrayList<>();
+        double maxConnectDistance = 35;
+
+        // Build all valid edges between contours
+        for (int i = 0; i < filteredContours.size(); i++) {
+            for (int j = i + 1; j < filteredContours.size(); j++) {
+                MatOfPoint c1 = filteredContours.get(i);
+                MatOfPoint c2 = filteredContours.get(j);
+
+                double bestDist = Double.MAX_VALUE;
+                Point closest1 = null, closest2 = null;
+
+                for (Point p1 : c1.toArray()) {
+                    for (Point p2 : c2.toArray()) {
+                        double dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            closest1 = p1;
+                            closest2 = p2;
+                        }
+                    }
+                }
+
+                if (bestDist <= maxConnectDistance) {
+                    edges.add(new ContourEdge(i, j, bestDist, closest1, closest2));
+                }
+            }
+        }
+
+        Collections.sort(edges);
+        UnionFind uf = new UnionFind(filteredContours.size());
+
+        for (ContourEdge edge : edges) {
+            if (uf.union(edge.i, edge.j)) {
+                // Get direction vector from p1 to p2
+                double dx = edge.p2.x - edge.p1.x;
+                double dy = edge.p2.y - edge.p1.y;
+                double length = Math.sqrt(dx * dx + dy * dy);
+
+                // Normalize and scale by 4
+                double scale = 4.0;
+                double offsetX = dx / length * scale;
+                double offsetY = dy / length * scale;
+
+                // Extend both ends
+                Point extendedP1 = new Point(edge.p1.x - offsetX, edge.p1.y - offsetY);
+                Point extendedP2 = new Point(edge.p2.x + offsetX, edge.p2.y + offsetY);
+
+                Imgproc.line(mask, extendedP1, extendedP2, new Scalar(255), 4);
+            }
+        }
+
+
+        Imgcodecs.imwrite("lines.png", mask);
+
+        contours.clear();
+        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        filteredContours.clear();
+        for (MatOfPoint contour : contours) {
+            if (Imgproc.contourArea(contour) >= 10) {
+                filteredContours.add(contour);
+            }
+        }
+
+        Imgproc.drawContours(clone, filteredContours, -1, new Scalar(0, 255, 255), -1);
 
         Imgcodecs.imwrite("blueFinal.png", clone);
 
@@ -102,7 +166,7 @@ public class MinimapExtractor {
         }
 
         List<ContourEdge> edges = new ArrayList<>();
-        double maxConnectDistance = 100.0;
+        double maxConnectDistance = 60;
 
         // Build all valid edges between contours
         for (int i = 0; i < filteredContours.size(); i++) {
@@ -139,6 +203,7 @@ public class MinimapExtractor {
             }
         }
 
+        contours.clear();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         Mat clone = original.clone();
@@ -150,7 +215,7 @@ public class MinimapExtractor {
             }
         }
 
-        Imgproc.drawContours(clone, filteredContours, -1, new Scalar(0, 255, 255), 2);
+        Imgproc.drawContours(clone, filteredContours, -1, new Scalar(255, 0, 255), -1);
 
         Imgcodecs.imwrite("finalWalls.png", clone);
 

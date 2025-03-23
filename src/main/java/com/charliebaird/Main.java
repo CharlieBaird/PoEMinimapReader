@@ -14,8 +14,10 @@ public class Main
 
     public static void main(String[] args)
     {
-        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/image.png";
+        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/complex.png";
         Mat original = Imgcodecs.imread(imagePath);
+
+        Mat blackMat = Mat.zeros(original.size(), original.type());
 
         long startTime = System.nanoTime();
 
