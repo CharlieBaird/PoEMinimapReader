@@ -3,6 +3,7 @@ package com.charliebaird;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.util.*;
 
@@ -155,12 +156,30 @@ public class MinimapExtractor
 
         filteredContours.clear();
         for (MatOfPoint contour : contours) {
-            if (Imgproc.contourArea(contour) >= 10) {
+            if (Imgproc.contourArea(contour) >= 20) {
                 filteredContours.add(contour);
             }
         }
 
+        filteredContours.sort((c1, c2) -> {
+            double area1 = Imgproc.contourArea(c1);
+            double area2 = Imgproc.contourArea(c2);
+            return Double.compare(area2, area1);
+        });
+
         Mat clone = original.clone();
+
+        for (MatOfPoint contour : filteredContours) {
+            System.out.println(Imgproc.contourArea(contour));
+
+            Moments moments = Imgproc.moments(contour);
+            int cx = (int)(moments.get_m10() / moments.get_m00());
+            int cy = (int)(moments.get_m01() / moments.get_m00());
+            Point center = new Point(cx, cy);
+
+            Imgproc.circle(clone, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
+            Imgproc.circle(output, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
+        }
 
         Imgproc.drawContours(clone, filteredContours, -1, blueColor, 2);
         Imgproc.drawContours(output, filteredContours, -1, blueColor, 2);
