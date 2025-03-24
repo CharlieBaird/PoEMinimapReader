@@ -3,10 +3,14 @@ package com.charliebaird;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+
 import java.util.*;
 
-public class MinimapExtractor {
-    static { nu.pattern.OpenCV.loadLocally(); }
+public class MinimapExtractor
+{
+    static {
+        nu.pattern.OpenCV.loadLocally();
+    }
 
     public Mat fullMinimap;
 
@@ -17,20 +21,42 @@ public class MinimapExtractor {
 
     public void resolve(Mat original)
     {
-        if (fullMinimap == null)
-        {
-            fullMinimap = Mat.zeros(original.size(), original.type());
-        }
+        Mat minimap = Mat.zeros(original.size(), original.type());
 
-        drawBlue(original);
+        drawBlue(original, minimap);
 
-        drawWalls(original);
+        drawWalls(original, minimap);
+
+        drawPlayer(minimap);
+
+        fullMinimap = minimap;
     }
 
     private final Scalar wallColor = new Scalar(180, 180, 180);
     private final Scalar blueColor = new Scalar(255, 100, 100);
 
-    public Mat[] drawBlue(Mat original)
+    private void drawPlayer(Mat output)
+    {
+        int centerX = output.cols() / 2;
+        int centerY = output.rows() / 2;
+        int halfSize = 6; // Half the length of the X (10px each direction for a 20px total)
+
+        Point p1 = new Point(centerX - halfSize, centerY - halfSize);
+        Point p2 = new Point(centerX + halfSize, centerY + halfSize);
+
+        Point p3 = new Point(centerX - halfSize, centerY + halfSize);
+        Point p4 = new Point(centerX + halfSize, centerY - halfSize);
+
+        Scalar red = new Scalar(0, 0, 255); // BGR format, so red is (0,0,255)
+
+        int thickness = 2;
+
+        Imgproc.line(output, p1, p2, red, thickness);
+        Imgproc.line(output, p3, p4, red, thickness);
+    }
+
+
+    public void drawBlue(Mat original, Mat output)
     {
         // Convert to HSV
         Mat hsv = new Mat();
@@ -134,37 +160,27 @@ public class MinimapExtractor {
 
         Mat clone = original.clone();
 
-        Imgproc.drawContours(clone, filteredContours, -1, blueColor, -1);
-        Imgproc.drawContours(fullMinimap, filteredContours, -1, blueColor, -1);
+        Imgproc.drawContours(clone, filteredContours, -1, blueColor, 2);
+        Imgproc.drawContours(output, filteredContours, -1, blueColor, 2);
 
         Imgcodecs.imwrite("blueFinal.png", clone);
-
-        return new Mat[] {clone, fullMinimap};
     }
 
-    public Mat[] drawWalls(Mat original) {
-        if (original.empty()) {
-            System.out.println("Could not load image.");
-            return null;
-        }
-
+    public void drawWalls(Mat original, Mat output)
+    {
         // Convert to HSV
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_RGB2HSV);
 
         Imgcodecs.imwrite("debug_mask.png", hsv);
 
-        // WALLS
-
-        // Define HSV range for purple (adjust these values as needed)
-        Scalar lowerBound = new Scalar(0, 45, 120);  // H, S, V
-        Scalar upperBound = new Scalar(5, 80, 200);
+        // Define HSV range for bright walls
+        Scalar lowerBound1 = new Scalar(0, 40, 110);
+        Scalar upperBound1 = new Scalar(5, 80, 200);
         Mat mask = new Mat();
-        Core.inRange(hsv, lowerBound, upperBound, mask);
+        Core.inRange(hsv, lowerBound1, upperBound1, mask);
 
         Imgcodecs.imwrite("walls.png", mask);
-
-        Mat kernel;
 
         // Find contours
         List<MatOfPoint> contours = new ArrayList<>();
@@ -230,20 +246,20 @@ public class MinimapExtractor {
             }
         }
 
-        Imgproc.drawContours(clone, filteredContours, -1, wallColor, -1);
-        Imgproc.drawContours(fullMinimap, filteredContours, -1, wallColor, -1);
+        Imgproc.drawContours(clone, filteredContours, -1, wallColor, 2);
+        Imgproc.drawContours(output, filteredContours, -1, wallColor, 2);
 
         Imgcodecs.imwrite("finalWalls.png", clone);
-
-        return new Mat[] {clone, fullMinimap};
     }
 
-    class ContourEdge implements Comparable<ContourEdge> {
+    class ContourEdge implements Comparable<ContourEdge>
+    {
         int i, j;
         double dist;
         Point p1, p2;
 
-        public ContourEdge(int i, int j, double dist, Point p1, Point p2) {
+        public ContourEdge(int i, int j, double dist, Point p1, Point p2)
+        {
             this.i = i;
             this.j = j;
             this.dist = dist;
@@ -251,25 +267,30 @@ public class MinimapExtractor {
             this.p2 = p2;
         }
 
-        public int compareTo(ContourEdge other) {
+        public int compareTo(ContourEdge other)
+        {
             return Double.compare(this.dist, other.dist);
         }
     }
 
-    class UnionFind {
+    class UnionFind
+    {
         int[] parent;
 
-        public UnionFind(int size) {
+        public UnionFind(int size)
+        {
             parent = new int[size];
             for (int i = 0; i < size; i++) parent[i] = i;
         }
 
-        public int find(int x) {
+        public int find(int x)
+        {
             if (parent[x] != x) parent[x] = find(parent[x]);
             return parent[x];
         }
 
-        public boolean union(int x, int y) {
+        public boolean union(int x, int y)
+        {
             int rx = find(x);
             int ry = find(y);
             if (rx == ry) return false;
