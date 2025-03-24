@@ -19,15 +19,19 @@ public class MinimapExtractor
 
     }
 
-    public void resolve(Mat original)
+    public void resolve(Mat original, boolean writeToDisk)
     {
+        original = original.submat(new Rect(259, 125, original.width() - 259 - 259, original.height() - 145 - 145));
+
         Mat minimap = Mat.zeros(original.size(), original.type());
 
-        drawBlue(original, minimap);
+        // Detect blue in image
+        drawBlue(original, minimap, writeToDisk);
 
-        drawWalls(original, minimap);
+        drawWalls(original, minimap, writeToDisk);
 
-        drawPlayer(minimap);
+        if (writeToDisk)
+            drawPlayer(minimap);
 
         fullMinimap = minimap;
     }
@@ -48,21 +52,26 @@ public class MinimapExtractor
         Point p4 = new Point(centerX + halfSize, centerY - halfSize);
 
         Scalar red = new Scalar(0, 0, 255); // BGR format, so red is (0,0,255)
-
         int thickness = 2;
 
         Imgproc.line(output, p1, p2, red, thickness);
         Imgproc.line(output, p3, p4, red, thickness);
     }
 
+    private void writeMatToDisk(String filename, Mat mat, boolean writeToDisk)
+    {
+        if (!writeToDisk) return;
 
-    public void drawBlue(Mat original, Mat output)
+        Imgcodecs.imwrite(filename, mat);
+    }
+
+    public void drawBlue(Mat original, Mat output, boolean writeToDisk)
     {
         // Convert to HSV
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_RGB2HSV);
 
-        Imgcodecs.imwrite("debug_mask.png", hsv);
+        writeMatToDisk("debug_mask.png", hsv, writeToDisk);
 
         // BLUE UNREVEALED
         Scalar lowerBound = new Scalar(15, 80, 155);  // H, S, V
@@ -70,21 +79,17 @@ public class MinimapExtractor
         Mat mask = new Mat();
         Core.inRange(hsv, lowerBound, upperBound, mask);
 
-        Imgcodecs.imwrite("blue.png", mask);
-
         Mat kernel;
 
         kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
         Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
 
-        Imgcodecs.imwrite("blue.png", mask);
+        writeMatToDisk("blue.png", mask, writeToDisk);
 
         // Find contours
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        Imgcodecs.imwrite("hierarchy.png", mask);
 
         List<MatOfPoint> filteredContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
@@ -145,9 +150,6 @@ public class MinimapExtractor
             }
         }
 
-
-        Imgcodecs.imwrite("lines.png", mask);
-
         contours.clear();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -163,16 +165,16 @@ public class MinimapExtractor
         Imgproc.drawContours(clone, filteredContours, -1, blueColor, 2);
         Imgproc.drawContours(output, filteredContours, -1, blueColor, 2);
 
-        Imgcodecs.imwrite("blueFinal.png", clone);
+        writeMatToDisk("blueFinal.png", clone, writeToDisk);
     }
 
-    public void drawWalls(Mat original, Mat output)
+    public void drawWalls(Mat original, Mat output, boolean writeToDisk)
     {
         // Convert to HSV
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_RGB2HSV);
 
-        Imgcodecs.imwrite("debug_mask.png", hsv);
+        writeMatToDisk("debug_mask.png", hsv, writeToDisk);
 
         // Define HSV range for bright walls
         Scalar lowerBound1 = new Scalar(0, 40, 110);
@@ -180,7 +182,7 @@ public class MinimapExtractor
         Mat mask = new Mat();
         Core.inRange(hsv, lowerBound1, upperBound1, mask);
 
-        Imgcodecs.imwrite("walls.png", mask);
+        writeMatToDisk("walls.png", mask, writeToDisk);
 
         // Find contours
         List<MatOfPoint> contours = new ArrayList<>();
@@ -249,7 +251,7 @@ public class MinimapExtractor
         Imgproc.drawContours(clone, filteredContours, -1, wallColor, 2);
         Imgproc.drawContours(output, filteredContours, -1, wallColor, 2);
 
-        Imgcodecs.imwrite("finalWalls.png", clone);
+        writeMatToDisk("finalWalls.png", clone, writeToDisk);
     }
 
     class ContourEdge implements Comparable<ContourEdge>

@@ -17,14 +17,14 @@ public class Main
 
     public static void main(String[] args)
     {
-        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/complex.png";
+        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/image4.png";
         Mat original = Imgcodecs.imread(imagePath);
 
         long startTime = System.nanoTime();
 
         MinimapExtractor minimap = new MinimapExtractor();
 
-        minimap.resolve(original);
+        minimap.resolve(original, true);
 
         long endTime = System.nanoTime();
         long durationInNanoseconds = endTime - startTime;
