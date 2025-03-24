@@ -17,13 +17,11 @@ public class Main
         String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/complex.png";
         Mat original = Imgcodecs.imread(imagePath);
 
-        Mat blackMat = Mat.zeros(original.size(), original.type());
-
         long startTime = System.nanoTime();
 
         MinimapExtractor minimap = new MinimapExtractor();
-        original = minimap.drawWalls(original);
-        original = minimap.drawBlue(original);
+
+        minimap.resolve(original);
 
         long endTime = System.nanoTime();
         long durationInNanoseconds = endTime - startTime;
@@ -32,6 +30,6 @@ public class Main
         System.out.println("Execution time: " + durationInMilliseconds + " ms");
 
 
-        Imgcodecs.imwrite("final.png", original);
+        Imgcodecs.imwrite("final.png", minimap.fullMinimap);
     }
 }

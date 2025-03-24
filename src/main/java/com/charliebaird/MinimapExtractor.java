@@ -8,14 +8,30 @@ import java.util.*;
 public class MinimapExtractor {
     static { nu.pattern.OpenCV.loadLocally(); }
 
-    public Mat drawBlue(Mat original)
+    public Mat fullMinimap;
+
+    public MinimapExtractor()
     {
-        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/image.png";
-        if (original.empty()) {
-            System.out.println("Could not load image.");
-            return null;
+
+    }
+
+    public void resolve(Mat original)
+    {
+        if (fullMinimap == null)
+        {
+            fullMinimap = Mat.zeros(original.size(), original.type());
         }
 
+        drawBlue(original);
+
+        drawWalls(original);
+    }
+
+    private final Scalar wallColor = new Scalar(180, 180, 180);
+    private final Scalar blueColor = new Scalar(255, 100, 100);
+
+    public Mat[] drawBlue(Mat original)
+    {
         // Convert to HSV
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_RGB2HSV);
@@ -50,8 +66,6 @@ public class MinimapExtractor {
                 filteredContours.add(contour);
             }
         }
-
-        Mat clone = original.clone();
 
         List<ContourEdge> edges = new ArrayList<>();
         double maxConnectDistance = 35;
@@ -118,16 +132,17 @@ public class MinimapExtractor {
             }
         }
 
-        Imgproc.drawContours(clone, filteredContours, -1, new Scalar(0, 255, 255), -1);
+        Mat clone = original.clone();
+
+        Imgproc.drawContours(clone, filteredContours, -1, blueColor, -1);
+        Imgproc.drawContours(fullMinimap, filteredContours, -1, blueColor, -1);
 
         Imgcodecs.imwrite("blueFinal.png", clone);
 
-        return clone;
-
+        return new Mat[] {clone, fullMinimap};
     }
 
-    public Mat drawWalls(Mat original) {
-        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/image.png";
+    public Mat[] drawWalls(Mat original) {
         if (original.empty()) {
             System.out.println("Could not load image.");
             return null;
@@ -215,24 +230,12 @@ public class MinimapExtractor {
             }
         }
 
-        Imgproc.drawContours(clone, filteredContours, -1, new Scalar(255, 0, 255), -1);
+        Imgproc.drawContours(clone, filteredContours, -1, wallColor, -1);
+        Imgproc.drawContours(fullMinimap, filteredContours, -1, wallColor, -1);
 
         Imgcodecs.imwrite("finalWalls.png", clone);
 
-        return clone;
-    }
-
-    public static double contourDistance(MatOfPoint c1, MatOfPoint c2) {
-        double minDist = Double.MAX_VALUE;
-        for (Point p1 : c1.toArray()) {
-            for (Point p2 : c2.toArray()) {
-                double dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                if (dist < minDist) {
-                    minDist = dist;
-                }
-            }
-        }
-        return minDist;
+        return new Mat[] {clone, fullMinimap};
     }
 
     class ContourEdge implements Comparable<ContourEdge> {
