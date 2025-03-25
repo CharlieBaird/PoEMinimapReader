@@ -16,9 +16,11 @@ public class MinimapExtractor
     public Mat fullMinimap;
     public Legend legend;
 
+    private Mat sulphiteMat;
+
     public MinimapExtractor()
     {
-
+        sulphiteMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/sulphite2.png", Imgcodecs.IMREAD_COLOR);
     }
 
     public void resolve(Mat original, boolean writeToDisk)
@@ -75,52 +77,43 @@ public class MinimapExtractor
 
     public void drawSulphite(Mat original, Mat output, boolean writeToDisk)
     {
-        // Convert to HSV
-        Mat hsv = new Mat();
-        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
+        // Convert to grayscale for better performance
+//        Imgproc.cvtColor(original, original, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.cvtColor(sulphiteMat, sulphiteMat, Imgproc.COLOR_BGR2GRAY);
 
-        // BLUE UNREVEALED
-        Scalar lowerBound = new Scalar(13, 169, 184);  // H, S, V
-        Scalar upperBound = new Scalar(28, 255, 255);
-        Mat mask = new Mat();
-        Core.inRange(hsv, lowerBound, upperBound, mask);
+        // Prepare result matrix
+        int resultCols = original.cols() - sulphiteMat.cols() + 1;
+        int resultRows = original.rows() - sulphiteMat.rows() + 1;
+        Mat result = new Mat(resultRows, resultCols, CvType.CV_32FC1);
 
-        Mat kernel;
+        // Perform template matching
+        Imgproc.matchTemplate(original, sulphiteMat, result, Imgproc.TM_CCOEFF_NORMED);
 
-        kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2.5, 2.5));
-        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
+        // Threshold for good matches
+        double threshold = 0.7;
+        List<Point> matchPoints = new ArrayList<>();
 
-        Mat nonZero = new Mat();
-        Core.findNonZero(mask, nonZero);
-
-        // Sulphite pattern
-        Point[] patternOffsets = new Point[] {
-                new Point(0, 0),
-                new Point(1, 0),
-                new Point(0, 1),
-                new Point(1, 2),
-                new Point(1, 4),
-                new Point(4, 14),
-        };
-
-        for (int i = 0; i < nonZero.rows(); i++) {
-            double[] point = nonZero.get(i, 0);
-            int x = (int) point[0];
-            int y = (int) point[1];
-
-            if (matchesPattern(mask, x, y, patternOffsets)) {
-                System.out.println("Sulphite found at: (" + x + ", " + y + ")");
-
-                x += 4;
-                y += 7;
-
-                legend.sulphitePoints.add(new Point(x, y));
-
-                if (writeToDisk)
-                {
-                    Imgproc.circle(output, new Point(x, y), 8, new Scalar(0, 255, 255), -1); // filled blue circle
+        // Loop through result matrix to find all matches above threshold
+        for (int y = 0; y < result.rows(); y++) {
+            for (int x = 0; x < result.cols(); x++) {
+                double confidence = result.get(y, x)[0];
+                if (confidence >= threshold) {
+                    Point matchLoc = new Point(x, y);
+                    matchPoints.add(matchLoc);
                 }
             }
+        }
+
+        for (Point p : matchPoints) {
+//            Imgproc.rectangle(
+//                    output,
+//                    p,
+//                    new Point(p.x + sulphiteMat.cols(), p.y + sulphiteMat.rows()),
+//                    new Scalar(0, 255, 0),
+//                    2
+//            );
+
+            Imgproc.circle(output, p, 8, new Scalar(0, 255, 255), -1);
         }
     }
 
