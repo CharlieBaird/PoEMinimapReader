@@ -5,12 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Add Mouse movement API">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapVisuals.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/utility/Timer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/utility/Timer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Robot/SmartBot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Robot/SmartBot.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,6 +38,7 @@
   "keyToString": {
     "Application.LiveScreenshot.executor": "Run",
     "Application.MinimapExtractor.executor": "Run",
+    "Application.RunBot.executor": "Run",
     "Application.SavedImage.executor": "Run",
     "Application.Unnamed.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -66,11 +65,19 @@
       <recent name="com.charliebaird.Minimap" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.SavedImage">
+  <component name="RunManager" selected="Application.LiveScreenshot">
     <configuration name="LiveScreenshot" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.charliebaird.Main" />
       <module name="MinimapReader" />
       <option name="PROGRAM_PARAMETERS" value="-l" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RunBot" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="com.charliebaird.Main" />
+      <module name="MinimapReader" />
+      <option name="PROGRAM_PARAMETERS" value="-r" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -85,6 +92,7 @@
     <list>
       <item itemvalue="Application.SavedImage" />
       <item itemvalue="Application.LiveScreenshot" />
+      <item itemvalue="Application.RunBot" />
     </list>
   </component>
   <component name="SharedIndexes">
@@ -106,7 +114,8 @@
       <workItem from="1742762582942" duration="14368000" />
       <workItem from="1742792559655" duration="10853000" />
       <workItem from="1742872278304" duration="18395000" />
-      <workItem from="1742929092945" duration="9263000" />
+      <workItem from="1742929092945" duration="9339000" />
+      <workItem from="1742944604622" duration="1181000" />
     </task>
     <task id="LOCAL-00001" summary="Happy with minimap">
       <option name="closed" value="true" />

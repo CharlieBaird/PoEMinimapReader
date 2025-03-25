@@ -50,14 +50,24 @@ public class SmartBot extends Robot
         this.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
     }
 
+    private boolean holdingRightClick = false;
     public void holdRightClick()
     {
+        if (holdingRightClick) return;
+        holdingRightClick = true;
+
+        delayMS(40);
         this.mousePress(InputEvent.BUTTON3_DOWN_MASK);
+        delayMS(40);
     }
 
     public void releaseRightClick()
     {
+        if (!holdingRightClick) return;
+        holdingRightClick = false;
+        delayMS(40);
         this.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
+        delayMS(40);
     }
 
     class Location {

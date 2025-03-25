@@ -53,7 +53,7 @@ public class MinimapExtractor
 
         // Detect unrevealed (blue lines) patches on the minimap
         // Stores these areas in the legend
-        drawBlue(original, minimap, writeToDisk);
+//        drawBlue(original, minimap, writeToDisk);
 
         // Detect walls in image (gray lines)
         // Stores these in the legend
@@ -61,7 +61,7 @@ public class MinimapExtractor
 
         // Find sprites if they exist (items, portals, etc.)
         // Stores these in the legend
-        findSprites(original, minimap, writeToDisk);
+//        findSprites(original, minimap, writeToDisk);
 
         // Only worry about the player icon if debug flag is enabled
         if (writeToDisk)

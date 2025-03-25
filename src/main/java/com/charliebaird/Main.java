@@ -35,31 +35,65 @@ public class Main
     {
         init();
 
-        if (args.length != 1)
-        {
-            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
-            Mat original = Imgcodecs.imread(imagePath);
+        try {
+            if (args.length != 1)
+            {
+                String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
+                Mat original = Imgcodecs.imread(imagePath);
 
-            Timer.start();
-            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-            minimap.resolve(original);
-            minimap.saveFinalMinimap("final.png");
-            Timer.stop();
-        }
+                Timer.start();
+                MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+                minimap.resolve(original);
+                Timer.stop();
+                minimap.saveFinalMinimap("final.png");
+            }
 
-        else if (args[0].equals("-l"))
-        {
-            Mat original = getScreenshot();
+            else if (args[0].equals("-l"))
+            {
+                Timer.start();
+                Mat original = getScreenshot();
 
-            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-            minimap.resolve(original);
-            Point p = minimap.findOptimalRevealAngle();
+                MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+                minimap.resolve(original);
+                Timer.stop();
+                Point p = minimap.findOptimalRevealAngle();
+                if (p != null)
+                {
+                    Point screenPoint = Legend.convertMinimapPointToScreen(p);
 
-//            Point screenPoint = Legend.convertMinimapPointToScreen(p);
+//                    robot.mouseMoveGeneralLocation(screenPoint);
+                }
 
-//            robot.mouseMoveGeneralLocation(screenPoint);
+                minimap.saveFinalMinimap("final.png");
+            }
 
-            minimap.saveFinalMinimap("final.png");
+            else if (args[0].equals("-r"))
+            {
+                for (int i=0; i<30; i++)
+                {
+                    Timer.start();
+                    Mat original = getScreenshot();
+
+                    MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+                    minimap.resolve(original);
+                    Timer.stop();
+
+                    Point p = minimap.findOptimalRevealAngle();
+                    if (p != null)
+                    {
+                        Point screenPoint = Legend.convertMinimapPointToScreen(p);
+
+                        robot.mouseMoveGeneralLocation(screenPoint);
+                        robot.holdRightClick();
+
+                    }
+                }
+                robot.releaseRightClick();
+            }
+        } catch (Exception e) {
+
+        } finally {
+            robot.releaseRightClick();
         }
     }
 
