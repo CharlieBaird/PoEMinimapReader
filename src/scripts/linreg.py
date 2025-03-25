@@ -19,7 +19,9 @@ data = [
     (1027, 10, 703.0, 337.0)
 ]
 
-data = [(x1 - 1920/2, y1 - 1080/2, x2 - 701, y2 - 345) for (x1, y1, x2, y2) in data]
+data = [(x2 - 701, y2 - 345, x1 - 1920/2, y1 - 1080/2) for (x1, y1, x2, y2) in data]
+
+print(data)
 
 # Extract X and Y components
 x1 = np.array([[x] for x, _, _, _ in data])
@@ -36,12 +38,12 @@ model_y = LinearRegression().fit(y1, y2)
 x2_pred = model_x.predict(x1)
 y2_pred = model_y.predict(y1)
 
-x_input = np.array([[720-701]])  # Must be 2D for sklearn
-y_input = np.array([[486-345]])
+x_input = np.array([[624-701]])  # Must be 2D for sklearn
+y_input = np.array([[346-345]])
 
 # Predict using the trained models
-predicted_x2 = model_x.predict(x_input)[0]
-predicted_y2 = model_y.predict(y_input)[0]
+predicted_x2 = model_x.predict(x_input)[0] + 1920/2
+predicted_y2 = model_y.predict(y_input)[0] + 1080/2
 
 print(f"Predicted X': {predicted_x2:.2f}")
 print(f"Predicted Y': {predicted_y2:.2f}")

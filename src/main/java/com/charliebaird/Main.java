@@ -63,7 +63,13 @@ public class Main
 
             MinimapExtractor minimap = new MinimapExtractor();
             minimap.resolve(original, true);
-            minimap.findOptimalRevealAngle();
+            Point p = minimap.findOptimalRevealAngle();
+
+            Point screenPoint = Legend.convertMinimapPointToScreen(p);
+
+            System.out.println(screenPoint);
+
+            robot.mouseMove((int) Math.round(screenPoint.x), (int) Math.round(screenPoint.y));
 //            timer.stop();
 
             Imgcodecs.imwrite("final.png", minimap.fullMinimap);
