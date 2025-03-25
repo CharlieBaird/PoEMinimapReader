@@ -99,13 +99,13 @@ public class MinimapExtractor
     {
         // Convert to HSV
         Mat hsv = new Mat();
-        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_RGB2HSV);
+        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
 
         writeMatToDisk("debug_mask.png", hsv, writeToDisk);
 
         // BLUE UNREVEALED
-        Scalar lowerBound = new Scalar(15, 80, 155);  // H, S, V
-        Scalar upperBound = new Scalar(25, 240, 255);
+        Scalar lowerBound = new Scalar(98, 135, 172);  // H, S, V
+        Scalar upperBound = new Scalar(103, 245, 201);
         Mat mask = new Mat();
         Core.inRange(hsv, lowerBound, upperBound, mask);
 
@@ -220,13 +220,13 @@ public class MinimapExtractor
     {
         // Convert to HSV
         Mat hsv = new Mat();
-        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_RGB2HSV);
+        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
 
         writeMatToDisk("debug_mask.png", hsv, writeToDisk);
 
         // Define HSV range for bright walls
-        Scalar lowerBound1 = new Scalar(0, 40, 110);
-        Scalar upperBound1 = new Scalar(5, 80, 200);
+        Scalar lowerBound1 = new Scalar(114, 50, 112);
+        Scalar upperBound1 = new Scalar(120, 91, 203);
         Mat mask = new Mat();
         Core.inRange(hsv, lowerBound1, upperBound1, mask);
 
