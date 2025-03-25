@@ -11,13 +11,15 @@ public class Legend
     public ArrayList<Point> revealPoints;
 
     // Sulphite found in map
-    public Point[] sulphitePoints;
+    public ArrayList<Point> sulphitePoints;
 
     // Item dropped in map
-    public Point[] itemPoints;
+    public ArrayList<Point> itemPoints;
 
     public Legend()
     {
         revealPoints = new ArrayList<>();
+        sulphitePoints = new ArrayList<>();
+        itemPoints = new ArrayList<>();
     }
 }

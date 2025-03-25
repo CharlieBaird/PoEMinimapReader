@@ -4,13 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Add green circles at inflection points of unrevealed area">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/utility/Timer.java" afterDir="false" />
+    <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Change filters from RGB to BGR">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/MinimapExtractor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,7 +83,7 @@
       <updated>1742762581965</updated>
       <workItem from="1742762582942" duration="14368000" />
       <workItem from="1742792559655" duration="10853000" />
-      <workItem from="1742872278304" duration="539000" />
+      <workItem from="1742872278304" duration="3421000" />
     </task>
     <task id="LOCAL-00001" summary="Happy with minimap">
       <option name="closed" value="true" />
@@ -112,7 +109,23 @@
       <option name="project" value="LOCAL" />
       <updated>1742842525838</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Add timer">
+      <option name="closed" value="true" />
+      <created>1742872863542</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1742872863542</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Change filters from RGB to BGR">
+      <option name="closed" value="true" />
+      <created>1742873921640</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1742873921640</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -160,6 +173,8 @@
     <MESSAGE value="Happy with minimap" />
     <MESSAGE value="Cleanup, refactor, abstraction" />
     <MESSAGE value="Add green circles at inflection points of unrevealed area" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add green circles at inflection points of unrevealed area" />
+    <MESSAGE value="Add timer" />
+    <MESSAGE value="Change filters from RGB to BGR" />
+    <option name="LAST_COMMIT_MESSAGE" value="Change filters from RGB to BGR" />
   </component>
 </project>

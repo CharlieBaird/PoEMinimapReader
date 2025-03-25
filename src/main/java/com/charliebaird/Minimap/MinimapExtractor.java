@@ -36,7 +36,7 @@ public class MinimapExtractor
         drawWalls(original, minimap, writeToDisk);
 
         // Find sulphite if it exists
-//        drawSulphite(original, minimap, writeToDisk);
+        drawSulphite(original, minimap, writeToDisk);
 
         if (writeToDisk)
             drawPlayer(minimap);
@@ -73,27 +73,70 @@ public class MinimapExtractor
         Imgcodecs.imwrite(filename, mat);
     }
 
-//    public void drawSulphite(Mat original, Mat output, boolean writeToDisk)
-//    {
-//        // Convert to HSV
-//        Mat hsv = new Mat();
-//        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
-//
-//        writeMatToDisk("debug_mask.png", hsv, writeToDisk);
-//
-//        // BLUE UNREVEALED
-//        Scalar lowerBound = new Scalar(15, 80, 155);  // H, S, V
-//        Scalar upperBound = new Scalar(25, 240, 255);
-//        Mat mask = new Mat();
-//        Core.inRange(hsv, lowerBound, upperBound, mask);
-//
-//        Mat kernel;
-//
-//        kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
-//        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
-//
-//        writeMatToDisk("blue.png", mask, writeToDisk);
-//    }
+    public void drawSulphite(Mat original, Mat output, boolean writeToDisk)
+    {
+        // Convert to HSV
+        Mat hsv = new Mat();
+        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
+
+        // BLUE UNREVEALED
+        Scalar lowerBound = new Scalar(13, 169, 184);  // H, S, V
+        Scalar upperBound = new Scalar(28, 255, 255);
+        Mat mask = new Mat();
+        Core.inRange(hsv, lowerBound, upperBound, mask);
+
+        Mat kernel;
+
+        kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2.5, 2.5));
+        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
+
+        Mat nonZero = new Mat();
+        Core.findNonZero(mask, nonZero);
+
+        // Sulphite pattern
+        Point[] patternOffsets = new Point[] {
+                new Point(0, 0),
+                new Point(1, 0),
+                new Point(0, 1),
+                new Point(1, 2),
+                new Point(1, 4),
+                new Point(4, 14),
+        };
+
+        for (int i = 0; i < nonZero.rows(); i++) {
+            double[] point = nonZero.get(i, 0);
+            int x = (int) point[0];
+            int y = (int) point[1];
+
+            if (matchesPattern(mask, x, y, patternOffsets)) {
+                System.out.println("Sulphite found at: (" + x + ", " + y + ")");
+
+                x += 4;
+                y += 7;
+
+                legend.sulphitePoints.add(new Point(x, y));
+
+                if (writeToDisk)
+                {
+                    Imgproc.circle(output, new Point(x, y), 8, new Scalar(0, 255, 255), -1); // filled blue circle
+                }
+            }
+        }
+    }
+
+    private boolean matchesPattern(Mat img, int originX, int originY, Point[] patternOffsets) {
+        for (Point offset : patternOffsets) {
+            int checkX = originX + (int) offset.x;
+            int checkY = originY + (int) offset.y;
+
+            if (checkX < 0 || checkY < 0 || checkX >= img.cols() || checkY >= img.rows())
+                return false;
+
+            double pixelVal = img.get(checkY, checkX)[0];
+            if (pixelVal != 255.0) return false;
+        }
+        return true;
+    }
 
     public void drawBlue(Mat original, Mat output, boolean writeToDisk)
     {
