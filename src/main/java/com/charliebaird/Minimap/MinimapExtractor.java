@@ -1,4 +1,4 @@
-package com.charliebaird;
+package com.charliebaird.Minimap;
 
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -14,6 +14,7 @@ public class MinimapExtractor
     }
 
     public Mat fullMinimap;
+    public Legend legend;
 
     public MinimapExtractor()
     {
@@ -26,10 +27,16 @@ public class MinimapExtractor
 
         Mat minimap = Mat.zeros(original.size(), original.type());
 
+        legend = new Legend();
+
         // Detect blue in image
         drawBlue(original, minimap, writeToDisk);
 
+        // Detect walls in image
         drawWalls(original, minimap, writeToDisk);
+
+        // Find sulphite if it exists
+//        drawSulphite(original, minimap, writeToDisk);
 
         if (writeToDisk)
             drawPlayer(minimap);
@@ -65,6 +72,28 @@ public class MinimapExtractor
 
         Imgcodecs.imwrite(filename, mat);
     }
+
+//    public void drawSulphite(Mat original, Mat output, boolean writeToDisk)
+//    {
+//        // Convert to HSV
+//        Mat hsv = new Mat();
+//        Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
+//
+//        writeMatToDisk("debug_mask.png", hsv, writeToDisk);
+//
+//        // BLUE UNREVEALED
+//        Scalar lowerBound = new Scalar(15, 80, 155);  // H, S, V
+//        Scalar upperBound = new Scalar(25, 240, 255);
+//        Mat mask = new Mat();
+//        Core.inRange(hsv, lowerBound, upperBound, mask);
+//
+//        Mat kernel;
+//
+//        kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
+//        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
+//
+//        writeMatToDisk("blue.png", mask, writeToDisk);
+//    }
 
     public void drawBlue(Mat original, Mat output, boolean writeToDisk)
     {
@@ -170,8 +199,6 @@ public class MinimapExtractor
         Mat clone = original.clone();
 
         for (MatOfPoint contour : filteredContours) {
-            System.out.println(Imgproc.contourArea(contour));
-
             Moments moments = Imgproc.moments(contour);
             int cx = (int)(moments.get_m10() / moments.get_m00());
             int cy = (int)(moments.get_m01() / moments.get_m00());
@@ -179,6 +206,8 @@ public class MinimapExtractor
 
             Imgproc.circle(clone, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
             Imgproc.circle(output, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
+
+            legend.revealPoints.add(center);
         }
 
         Imgproc.drawContours(clone, filteredContours, -1, blueColor, 2);

@@ -1,37 +1,27 @@
 package com.charliebaird;
 
+import com.charliebaird.Minimap.MinimapExtractor;
+import com.charliebaird.utility.Timer;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class Main
 {
     static { nu.pattern.OpenCV.loadLocally(); }
+    static Timer timer = new Timer();
 
     public static void main(String[] args)
     {
-        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/minimap2.png";
+        String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/minimap1.png";
         Mat original = Imgcodecs.imread(imagePath);
 
-        long startTime = System.nanoTime();
+        timer.start();
 
         MinimapExtractor minimap = new MinimapExtractor();
 
         minimap.resolve(original, true);
 
-        long endTime = System.nanoTime();
-        long durationInNanoseconds = endTime - startTime;
-        double durationInMilliseconds = durationInNanoseconds / 1_000_000.0;
-
-        System.out.println("Execution time: " + durationInMilliseconds + " ms");
-
+        timer.stop();
 
         Imgcodecs.imwrite("final.png", minimap.fullMinimap);
     }
