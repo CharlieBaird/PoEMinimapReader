@@ -2,6 +2,7 @@ package com.charliebaird;
 
 import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
+import com.charliebaird.Robot.SmartBot;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -16,14 +17,14 @@ public class Main
 {
     static { nu.pattern.OpenCV.loadLocally(); }
     static Timer timer = new Timer();
-    static Robot robot;
+    static SmartBot robot;
 
     private static void init()
     {
         GraphicsDevice[] screens = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
 
         try {
-            robot = new Robot(screens[1]); // Use Robot for the second monitor
+            robot = new SmartBot(screens[1]); // Use Robot for the second monitor
         } catch (AWTException e) {
             throw new RuntimeException(e);
         }
@@ -31,10 +32,10 @@ public class Main
 
     public static void main(String[] args)
     {
+        init();
+
         if (args.length != 1)
         {
-            init();
-
             String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/minimap1.png";
             Mat original = Imgcodecs.imread(imagePath);
 
@@ -57,8 +58,6 @@ public class Main
 
         else if (args[0].equals("-l"))
         {
-            init();
-//            timer.start();
             Mat original = getScreenshot();
 
             MinimapExtractor minimap = new MinimapExtractor();
@@ -67,10 +66,7 @@ public class Main
 
             Point screenPoint = Legend.convertMinimapPointToScreen(p);
 
-            System.out.println(screenPoint);
-
-            robot.mouseMove((int) Math.round(screenPoint.x), (int) Math.round(screenPoint.y));
-//            timer.stop();
+            robot.mouseMoveGeneralLocation(screenPoint);
 
             Imgcodecs.imwrite("final.png", minimap.fullMinimap);
         }
