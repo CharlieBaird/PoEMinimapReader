@@ -52,12 +52,12 @@ public class Main
         else if (args[0].equals("-l"))
         {
             init();
-            timer.start();
+//            timer.start();
             Mat original = getScreenshot();
 
             MinimapExtractor minimap = new MinimapExtractor();
             minimap.resolve(original, true);
-            timer.stop();
+//            timer.stop();
 
             Imgcodecs.imwrite("final.png", minimap.fullMinimap);
         }

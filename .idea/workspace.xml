@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Change filters from RGB to BGR">
+    <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Abstract sulphite detector to a sprite detector">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -35,7 +35,9 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.LiveScreenshot.executor": "Run",
     "Application.MinimapExtractor.executor": "Run",
+    "Application.SavedImage.executor": "Run",
     "Application.Unnamed.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
@@ -56,14 +58,26 @@
       <recent name="com.charliebaird.Minimap" />
     </key>
   </component>
-  <component name="RunManager">
-    <configuration name="Unnamed" type="Application" factoryName="Application" nameIsGenerated="true">
+  <component name="RunManager" selected="Application.LiveScreenshot">
+    <configuration name="LiveScreenshot" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="com.charliebaird.Main" />
+      <module name="MinimapReader" />
+      <option name="PROGRAM_PARAMETERS" value="-l" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SavedImage" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.charliebaird.Main" />
       <module name="MinimapReader" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Application.SavedImage" />
+      <item itemvalue="Application.LiveScreenshot" />
+    </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -83,7 +97,7 @@
       <updated>1742762581965</updated>
       <workItem from="1742762582942" duration="14368000" />
       <workItem from="1742792559655" duration="10853000" />
-      <workItem from="1742872278304" duration="3421000" />
+      <workItem from="1742872278304" duration="11216000" />
     </task>
     <task id="LOCAL-00001" summary="Happy with minimap">
       <option name="closed" value="true" />
@@ -125,7 +139,31 @@
       <option name="project" value="LOCAL" />
       <updated>1742873921640</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Add sulphite detector">
+      <option name="closed" value="true" />
+      <created>1742875759766</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1742875759766</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add sulphite detector">
+      <option name="closed" value="true" />
+      <created>1742880308404</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1742880308404</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Abstract sulphite detector to a sprite detector">
+      <option name="closed" value="true" />
+      <created>1742881566407</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1742881566407</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -175,6 +213,8 @@
     <MESSAGE value="Add green circles at inflection points of unrevealed area" />
     <MESSAGE value="Add timer" />
     <MESSAGE value="Change filters from RGB to BGR" />
-    <option name="LAST_COMMIT_MESSAGE" value="Change filters from RGB to BGR" />
+    <MESSAGE value="Add sulphite detector" />
+    <MESSAGE value="Abstract sulphite detector to a sprite detector" />
+    <option name="LAST_COMMIT_MESSAGE" value="Abstract sulphite detector to a sprite detector" />
   </component>
 </project>

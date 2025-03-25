@@ -5,6 +5,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
+import com.charliebaird.utility.Timer;
+
 import java.util.*;
 
 public class MinimapExtractor
@@ -16,11 +18,14 @@ public class MinimapExtractor
     public Mat fullMinimap;
     public Legend legend;
 
-    private Mat sulphiteMat;
+    private final Mat sulphiteMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/sulphite.png", Imgcodecs.IMREAD_COLOR);
+    private final Mat itemMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/greensquare.png", Imgcodecs.IMREAD_COLOR);
+    private final Mat doorMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/door.png", Imgcodecs.IMREAD_COLOR);
+    private final Mat portalMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/portal.png", Imgcodecs.IMREAD_COLOR);
+    private final Timer timer = new Timer();
 
     public MinimapExtractor()
     {
-        sulphiteMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/sulphite.png", Imgcodecs.IMREAD_COLOR);
     }
 
     public void resolve(Mat original, boolean writeToDisk)
@@ -37,8 +42,10 @@ public class MinimapExtractor
         // Detect walls in image
         drawWalls(original, minimap, writeToDisk);
 
-        // Find sulphite if it exists
-        drawSulphite(original, minimap, writeToDisk);
+        // Find sprites if they exist
+        timer.start();
+        drawSprites(original, minimap, writeToDisk);
+        timer.stop();
 
         if (writeToDisk)
             drawPlayer(minimap);
@@ -75,51 +82,49 @@ public class MinimapExtractor
         Imgcodecs.imwrite(filename, mat);
     }
 
-    public void drawSulphite(Mat original, Mat output, boolean writeToDisk)
+    public void drawSprites(Mat original, Mat output, boolean writeToDisk)
     {
-        ArrayList<Point> matchPoints = findSpriteLocations(original, sulphiteMat);
+        ArrayList<Point> matchPoints = findSpriteLocations(original, sulphiteMat, 0.6);
 
         for (Point p : matchPoints) {
             Imgproc.circle(output, p, 8, new Scalar(0, 255, 255), -1);
         }
+
+        matchPoints = findSpriteLocations(original, portalMat, 0.75);
+
+        for (Point p : matchPoints) {
+            Imgproc.circle(output, p, 8, new Scalar(255, 213, 144), -1);
+        }
+
+        matchPoints = findSpriteLocations(original, itemMat, 0.75);
+
+        for (Point p : matchPoints) {
+            Imgproc.circle(output, p, 8, new Scalar(200, 255, 200), -1);
+        }
+
+        matchPoints = findSpriteLocations(original, doorMat, 0.75);
+
+        for (Point p : matchPoints) {
+            Imgproc.circle(output, p, 8, new Scalar(0, 165, 255), -1);
+        }
     }
 
-    public static ArrayList<Point> findSpriteLocations(Mat screen, Mat spriteTemplate) {
-//        // Prepare result matrix
-//        int resultCols = screen.cols() - spriteTemplate.cols() + 1;
-//        int resultRows = screen.rows() - spriteTemplate.rows() + 1;
-//        Mat result = new Mat(resultRows, resultCols, CvType.CV_32FC1);
-//
-//        // Perform template matching
-//        Imgproc.matchTemplate(screen, spriteTemplate, result, Imgproc.TM_CCOEFF_NORMED);
-//
-//        // Threshold for good matches
-//        double threshold = 0.7;
-//        ArrayList<Point> matchPoints = new ArrayList<>();
-//
-//        // Loop through result matrix to find all matches above threshold
-//        for (int y = 0; y < result.rows(); y++) {
-//            for (int x = 0; x < result.cols(); x++) {
-//                double confidence = result.get(y, x)[0];
-//                if (confidence >= threshold) {
-//                    Point matchLoc = new Point(x, y);
-//                    matchPoints.add(matchLoc);
-//                }
-//            }
-//        }
-//
-//        return matchPoints;
-
+    public static ArrayList<Point> findSpriteLocations(Mat screen, Mat spriteTemplate, double threshold) {
         ArrayList<Point> foundPoints = new ArrayList<>();
 
         // Convert to grayscale for performance
         Mat grayScreen = new Mat();
         Mat grayTemplate = new Mat();
-        Imgproc.cvtColor(screen, grayScreen, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.cvtColor(spriteTemplate, grayTemplate, Imgproc.COLOR_BGR2GRAY);
 
-        double threshold = 0.75; // Matching confidence
-        double[] scales = {1.0}; // Scales to test
+        grayScreen = screen;
+        grayTemplate = spriteTemplate;
+
+//        Imgproc.GaussianBlur(spriteTemplate, grayScreen, new Size(3, 3), 0);
+
+//        Imgproc.cvtColor(screen, grayScreen, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.cvtColor(spriteTemplate, grayTemplate, Imgproc.COLOR_BGR2GRAY);
+
+        double[] scales = {1.0};
 
         for (double scale : scales) {
             // Resize the template
