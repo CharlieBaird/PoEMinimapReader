@@ -20,7 +20,7 @@ public class MinimapExtractor
 
     public MinimapExtractor()
     {
-        sulphiteMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/sulphite2.png", Imgcodecs.IMREAD_COLOR);
+        sulphiteMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/sulphite.png", Imgcodecs.IMREAD_COLOR);
     }
 
     public void resolve(Mat original, boolean writeToDisk)
@@ -77,58 +77,87 @@ public class MinimapExtractor
 
     public void drawSulphite(Mat original, Mat output, boolean writeToDisk)
     {
-        // Convert to grayscale for better performance
-//        Imgproc.cvtColor(original, original, Imgproc.COLOR_BGR2GRAY);
-//        Imgproc.cvtColor(sulphiteMat, sulphiteMat, Imgproc.COLOR_BGR2GRAY);
-
-        // Prepare result matrix
-        int resultCols = original.cols() - sulphiteMat.cols() + 1;
-        int resultRows = original.rows() - sulphiteMat.rows() + 1;
-        Mat result = new Mat(resultRows, resultCols, CvType.CV_32FC1);
-
-        // Perform template matching
-        Imgproc.matchTemplate(original, sulphiteMat, result, Imgproc.TM_CCOEFF_NORMED);
-
-        // Threshold for good matches
-        double threshold = 0.7;
-        List<Point> matchPoints = new ArrayList<>();
-
-        // Loop through result matrix to find all matches above threshold
-        for (int y = 0; y < result.rows(); y++) {
-            for (int x = 0; x < result.cols(); x++) {
-                double confidence = result.get(y, x)[0];
-                if (confidence >= threshold) {
-                    Point matchLoc = new Point(x, y);
-                    matchPoints.add(matchLoc);
-                }
-            }
-        }
+        ArrayList<Point> matchPoints = findSpriteLocations(original, sulphiteMat);
 
         for (Point p : matchPoints) {
-//            Imgproc.rectangle(
-//                    output,
-//                    p,
-//                    new Point(p.x + sulphiteMat.cols(), p.y + sulphiteMat.rows()),
-//                    new Scalar(0, 255, 0),
-//                    2
-//            );
-
             Imgproc.circle(output, p, 8, new Scalar(0, 255, 255), -1);
         }
     }
 
-    private boolean matchesPattern(Mat img, int originX, int originY, Point[] patternOffsets) {
-        for (Point offset : patternOffsets) {
-            int checkX = originX + (int) offset.x;
-            int checkY = originY + (int) offset.y;
+    public static ArrayList<Point> findSpriteLocations(Mat screen, Mat spriteTemplate) {
+//        // Prepare result matrix
+//        int resultCols = screen.cols() - spriteTemplate.cols() + 1;
+//        int resultRows = screen.rows() - spriteTemplate.rows() + 1;
+//        Mat result = new Mat(resultRows, resultCols, CvType.CV_32FC1);
+//
+//        // Perform template matching
+//        Imgproc.matchTemplate(screen, spriteTemplate, result, Imgproc.TM_CCOEFF_NORMED);
+//
+//        // Threshold for good matches
+//        double threshold = 0.7;
+//        ArrayList<Point> matchPoints = new ArrayList<>();
+//
+//        // Loop through result matrix to find all matches above threshold
+//        for (int y = 0; y < result.rows(); y++) {
+//            for (int x = 0; x < result.cols(); x++) {
+//                double confidence = result.get(y, x)[0];
+//                if (confidence >= threshold) {
+//                    Point matchLoc = new Point(x, y);
+//                    matchPoints.add(matchLoc);
+//                }
+//            }
+//        }
+//
+//        return matchPoints;
 
-            if (checkX < 0 || checkY < 0 || checkX >= img.cols() || checkY >= img.rows())
-                return false;
+        ArrayList<Point> foundPoints = new ArrayList<>();
 
-            double pixelVal = img.get(checkY, checkX)[0];
-            if (pixelVal != 255.0) return false;
+        // Convert to grayscale for performance
+        Mat grayScreen = new Mat();
+        Mat grayTemplate = new Mat();
+        Imgproc.cvtColor(screen, grayScreen, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.cvtColor(spriteTemplate, grayTemplate, Imgproc.COLOR_BGR2GRAY);
+
+        double threshold = 0.75; // Matching confidence
+        double[] scales = {1.0}; // Scales to test
+
+        for (double scale : scales) {
+            // Resize the template
+            Size scaledSize = new Size(
+                    grayTemplate.cols() * scale,
+                    grayTemplate.rows() * scale
+            );
+
+            if (scaledSize.width < 1 || scaledSize.height < 1 ||
+                    scaledSize.width > grayScreen.cols() ||
+                    scaledSize.height > grayScreen.rows()) {
+                continue; // Skip invalid sizes
+            }
+
+            Mat scaledTemplate = new Mat();
+            Imgproc.resize(grayTemplate, scaledTemplate, scaledSize);
+
+            // Create result matrix
+            int resultCols = grayScreen.cols() - scaledTemplate.cols() + 1;
+            int resultRows = grayScreen.rows() - scaledTemplate.rows() + 1;
+            Mat result = new Mat(resultRows, resultCols, CvType.CV_32FC1);
+
+            // Match
+            Imgproc.matchTemplate(grayScreen, scaledTemplate, result, Imgproc.TM_CCOEFF_NORMED);
+
+            // Scan for points over threshold
+            for (int y = 0; y < result.rows(); y++) {
+                for (int x = 0; x < result.cols(); x++) {
+                    double matchVal = result.get(y, x)[0];
+                    if (matchVal >= threshold) {
+                        Point matchPoint = new Point(x, y);
+                        foundPoints.add(matchPoint);
+                    }
+                }
+            }
         }
-        return true;
+
+        return foundPoints;
     }
 
     public void drawBlue(Mat original, Mat output, boolean writeToDisk)

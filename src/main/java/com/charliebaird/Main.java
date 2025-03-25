@@ -52,11 +52,13 @@ public class Main
         else if (args[0].equals("-l"))
         {
             init();
-
+            timer.start();
             Mat original = getScreenshot();
 
             MinimapExtractor minimap = new MinimapExtractor();
             minimap.resolve(original, true);
+            timer.stop();
+
             Imgcodecs.imwrite("final.png", minimap.fullMinimap);
         }
     }
@@ -64,9 +66,8 @@ public class Main
     public static Mat getScreenshot()
     {
         // Capture screenshot from middle monitor
-        timer.start();
+
         BufferedImage screenshot = robot.createScreenCapture(new Rectangle(0, 0, 1920, 1080));
-        timer.stop();
 
         return bufferedImageToMat(screenshot);
     }
