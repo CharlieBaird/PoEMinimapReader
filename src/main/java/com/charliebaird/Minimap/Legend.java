@@ -9,7 +9,8 @@ import java.util.ArrayList;
 // Generated structure from minimap of detected objects in map (sulphite, dropped items, reveal points)
 public class Legend
 {
-    public ArrayList<MatOfPoint> contours;
+    // Wall contours
+    public ArrayList<MatOfPoint> wallContours;
 
     // Optimal places to walk to reveal minimap
     public ArrayList<Point> revealPoints;
@@ -20,15 +21,23 @@ public class Legend
     // Item dropped in map
     public ArrayList<Point> itemPoints;
 
+    // Portal locations
+    public ArrayList<Point> portalPoints;
+
+    // Door locations
+    public ArrayList<Point> doorPoints;
+
     public Legend()
     {
         revealPoints = new ArrayList<>();
         sulphitePoints = new ArrayList<>();
         itemPoints = new ArrayList<>();
+        portalPoints = new ArrayList<>();
+        doorPoints = new ArrayList<>();
     }
 
     public Point findOptimalPoint(Mat minimap) {
-        if (revealPoints == null || revealPoints.isEmpty() || contours == null || contours.isEmpty() || minimap == null) {
+        if (revealPoints == null || revealPoints.isEmpty() || wallContours == null || wallContours.isEmpty() || minimap == null) {
             return null;
         }
 
@@ -38,7 +47,7 @@ public class Legend
 
         for (Point revealPoint : revealPoints) {
             double centerDist = euclideanDistance(revealPoint, center);
-            double contourDist = distanceToNearestContour(revealPoint, contours);
+            double contourDist = distanceToNearestContour(revealPoint, wallContours);
             double score = centerDist - contourDist;
 
             if (score < bestScore) {

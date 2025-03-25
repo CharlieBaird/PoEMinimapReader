@@ -5,61 +5,80 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
-import com.charliebaird.utility.Timer;
-
 import java.util.*;
+
+import static com.charliebaird.Minimap.MinimapVisuals.*;
 
 public class MinimapExtractor
 {
+    // Load OpenCV library
     static {
         nu.pattern.OpenCV.loadLocally();
     }
 
     public Mat fullMinimap;
     public Legend legend;
+    private final boolean writeToDisk;
 
+    // Wall and blue colors
+    private final Scalar wallColor = new Scalar(180, 180, 180);
+    private final Scalar blueColor = new Scalar(255, 100, 100);
+
+    // Sprites list
     private final Mat sulphiteMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/sulphite.png", Imgcodecs.IMREAD_COLOR);
     private final Mat itemMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/greensquare.png", Imgcodecs.IMREAD_COLOR);
     private final Mat doorMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/door.png", Imgcodecs.IMREAD_COLOR);
     private final Mat portalMat = Imgcodecs.imread("C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/src/resources/portal.png", Imgcodecs.IMREAD_COLOR);
-    private final Timer timer = new Timer();
 
-    public MinimapExtractor()
+    // Constructor
+    // writeToDisk is a debug flag to write intermediary output files to disk as it executes
+    public MinimapExtractor(boolean writeToDisk)
     {
+        this.writeToDisk = writeToDisk;
     }
 
-    public void resolve(Mat original, boolean writeToDisk)
+    // Main method to create a resolved minimap from a given 1920x1080 screenshot of game
+    // Params: Mat original is the 1920x1080 screenshot encoded in BGR
+    public void resolve(Mat original)
     {
+        // Crop original mat, removing outer UI elements
         original = original.submat(new Rect(259, 125, original.width() - 259 - 259, original.height() - 145 - 145));
 
-        System.out.println(original.size());
-
+        // Create a black minimap of same size as cropped mat
         Mat minimap = Mat.zeros(original.size(), original.type());
 
+        // Initialize legend. The legend stores discovered information such as
+        // item drop locations, portal locations, door locations, sulphite locations
         legend = new Legend();
 
-        // Detect blue in image
+        // Detect unrevealed (blue lines) patches on the minimap
+        // Stores these areas in the legend
         drawBlue(original, minimap, writeToDisk);
 
-        // Detect walls in image
+        // Detect walls in image (gray lines)
+        // Stores these in the legend
         drawWalls(original, minimap, writeToDisk);
 
-        // Find sprites if they exist
-        timer.start();
-        drawSprites(original, minimap, writeToDisk);
-        timer.stop();
+        // Find sprites if they exist (items, portals, etc.)
+        // Stores these in the legend
+        findSprites(original, minimap, writeToDisk);
 
+        // Only worry about the player icon if debug flag is enabled
         if (writeToDisk)
             drawPlayer(minimap);
 
         fullMinimap = minimap;
     }
 
+    // Looks at the list of unrevealed sectors in the minimap,
+    // and finds the optimal one to travel to
+    // If absolutely no point is found, returns null
     public Point findOptimalRevealAngle()
     {
         Point p = legend.findOptimalPoint(fullMinimap);
 
-        if (p != null)
+        // Circles the optimal reveal point
+        if (writeToDisk && p != null)
         {
             Imgproc.circle(fullMinimap, p, 16, new Scalar(203, 192, 255), -1);
         }
@@ -67,73 +86,25 @@ public class MinimapExtractor
         return p;
     }
 
-    private final Scalar wallColor = new Scalar(180, 180, 180);
-    private final Scalar blueColor = new Scalar(255, 100, 100);
-
-    private void drawPlayer(Mat output)
+    // Finds all sprite locations in the mat and optionally marks them on the output minimap
+    // Puts all discovered sprites in the legend
+    public void findSprites(Mat original, Mat output, boolean writeToDisk)
     {
-        int centerX = output.cols() / 2;
-        int centerY = output.rows() / 2;
-        int halfSize = 6; // Half the length of the X (10px each direction for a 20px total)
+        legend.sulphitePoints = findSpriteLocations(original, sulphiteMat, 0.75);
+        legend.portalPoints = findSpriteLocations(original, portalMat, 0.75);
+        legend.itemPoints = findSpriteLocations(original, itemMat, 0.6);
+        legend.doorPoints = findSpriteLocations(original, doorMat, 0.65);
 
-        Point p1 = new Point(centerX - halfSize, centerY - halfSize);
-        Point p2 = new Point(centerX + halfSize, centerY + halfSize);
-
-        Point p3 = new Point(centerX - halfSize, centerY + halfSize);
-        Point p4 = new Point(centerX + halfSize, centerY - halfSize);
-
-        Scalar red = new Scalar(0, 0, 255); // BGR format, so red is (0,0,255)
-        int thickness = 2;
-
-        Imgproc.line(output, p1, p2, red, thickness);
-        Imgproc.line(output, p3, p4, red, thickness);
-    }
-
-    private void writeMatToDisk(String filename, Mat mat, boolean writeToDisk)
-    {
-        if (!writeToDisk) return;
-
-        Imgcodecs.imwrite(filename, mat);
-    }
-
-    public void drawSprites(Mat original, Mat output, boolean writeToDisk)
-    {
-        ArrayList<Point> matchPoints = findSpriteLocations(original, sulphiteMat, 0.75);
-
-        for (Point p : matchPoints) {
-            Imgproc.circle(output, p, 8, new Scalar(0, 255, 255), -1);
-        }
-
-        matchPoints = findSpriteLocations(original, portalMat, 0.75);
-
-        for (Point p : matchPoints) {
-            Imgproc.circle(output, p, 8, new Scalar(255, 213, 144), -1);
-        }
-
-        matchPoints = findSpriteLocations(original, itemMat, 0.6);
-
-        for (Point p : matchPoints) {
-            Imgproc.circle(output, p, 8, new Scalar(200, 255, 200), -1);
-        }
-
-        matchPoints = findSpriteLocations(original, doorMat, 0.65);
-
-        for (Point p : matchPoints) {
-            Imgproc.circle(output, p, 8, new Scalar(0, 165, 255), -1);
-            System.out.println(p);
-            Imgcodecs.imwrite("final.png", output);
+        if (writeToDisk)
+        {
+            drawSprites(output, legend);
         }
     }
 
-    public static ArrayList<Point> findSpriteLocations(Mat screen, Mat spriteTemplate, double threshold) {
+    // Uses OpenCV templating to find given spriteTemplate on screen
+    // Returns a list of all points they occur at
+    public static ArrayList<Point> findSpriteLocations(Mat grayScreen, Mat grayTemplate, double threshold) {
         ArrayList<Point> foundPoints = new ArrayList<>();
-
-        // Convert to grayscale for performance
-        Mat grayScreen = new Mat();
-        Mat grayTemplate = new Mat();
-
-        grayScreen = screen;
-        grayTemplate = spriteTemplate;
 
 //        Imgproc.GaussianBlur(spriteTemplate, grayScreen, new Size(3, 3), 0);
 
@@ -178,32 +149,35 @@ public class MinimapExtractor
         return foundPoints;
     }
 
+    // Find unrevealed segments on minimap
     public void drawBlue(Mat original, Mat output, boolean writeToDisk)
     {
-        // Convert to HSV
+        // Convert color encoding to HSV
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
 
+        // Optionally save hsv mask to disk
         writeMatToDisk("debug_mask.png", hsv, writeToDisk);
 
-        // BLUE UNREVEALED
+        // Use HSV in range openCV method to filter the majority of mat
         Scalar lowerBound = new Scalar(98, 135, 172);  // H, S, V
         Scalar upperBound = new Scalar(103, 245, 201);
         Mat mask = new Mat();
         Core.inRange(hsv, lowerBound, upperBound, mask);
 
-        Mat kernel;
-
-        kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
+        // Clean up some noise
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
         Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
 
+        // Optionally save intermediary form of mask
         writeMatToDisk("blue.png", mask, writeToDisk);
 
-        // Find contours
+        // Find contours (segments of blue essentially)
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
+        // Filter by larger ones
         List<MatOfPoint> filteredContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             if (Imgproc.contourArea(contour) >= 10) {
@@ -211,117 +185,131 @@ public class MinimapExtractor
             }
         }
 
-        List<ContourEdge> edges = new ArrayList<>();
-        double maxConnectDistance = 35;
-
-        // Build all valid edges between contours
-        for (int i = 0; i < filteredContours.size(); i++) {
-            for (int j = i + 1; j < filteredContours.size(); j++) {
-                MatOfPoint c1 = filteredContours.get(i);
-                MatOfPoint c2 = filteredContours.get(j);
-
-                double bestDist = Double.MAX_VALUE;
-                Point closest1 = null, closest2 = null;
-
-                for (Point p1 : c1.toArray()) {
-                    for (Point p2 : c2.toArray()) {
-                        double dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                        if (dist < bestDist) {
-                            bestDist = dist;
-                            closest1 = p1;
-                            closest2 = p2;
-                        }
-                    }
-                }
-
-                if (bestDist <= maxConnectDistance) {
-                    edges.add(new ContourEdge(i, j, bestDist, closest1, closest2));
-                }
-            }
-        }
-
-        Collections.sort(edges);
-        UnionFind uf = new UnionFind(filteredContours.size());
-
-        for (ContourEdge edge : edges) {
-            if (uf.union(edge.i, edge.j)) {
-                // Get direction vector from p1 to p2
-                double dx = edge.p2.x - edge.p1.x;
-                double dy = edge.p2.y - edge.p1.y;
-                double length = Math.sqrt(dx * dx + dy * dy);
-
-                // Normalize and scale by 4
-                double scale = 4.0;
-                double offsetX = dx / length * scale;
-                double offsetY = dy / length * scale;
-
-                // Extend both ends
-                Point extendedP1 = new Point(edge.p1.x - offsetX, edge.p1.y - offsetY);
-                Point extendedP2 = new Point(edge.p2.x + offsetX, edge.p2.y + offsetY);
-
+        // Build lines connecting "close enough" blue segments
+//        List<ContourEdge> edges = new ArrayList<>();
+//        double maxConnectDistance = 35;
+//        for (int i = 0; i < filteredContours.size(); i++) {
+//            for (int j = i + 1; j < filteredContours.size(); j++) {
+//                MatOfPoint c1 = filteredContours.get(i);
+//                MatOfPoint c2 = filteredContours.get(j);
+//
+//                double bestDist = Double.MAX_VALUE;
+//                Point closest1 = null, closest2 = null;
+//
+//                for (Point p1 : c1.toArray()) {
+//                    for (Point p2 : c2.toArray()) {
+//                        double dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+//                        if (dist < bestDist) {
+//                            bestDist = dist;
+//                            closest1 = p1;
+//                            closest2 = p2;
+//                        }
+//                    }
+//                }
+//
+//                if (bestDist <= maxConnectDistance) {
+//                    edges.add(new ContourEdge(i, j, bestDist, closest1, closest2));
+//                }
+//            }
+//        }
+//
+//        Collections.sort(edges);
+//        UnionFind uf = new UnionFind(filteredContours.size());
+//
+//        for (ContourEdge edge : edges) {
+//            if (uf.union(edge.i, edge.j)) {
+//                // Get direction vector from p1 to p2
+//                double dx = edge.p2.x - edge.p1.x;
+//                double dy = edge.p2.y - edge.p1.y;
+//                double length = Math.sqrt(dx * dx + dy * dy);
+//
+//                // Normalize and scale by 4
+//                double scale = 4.0;
+//                double offsetX = dx / length * scale;
+//                double offsetY = dy / length * scale;
+//
+//                // Extend both ends
+//                Point extendedP1 = new Point(edge.p1.x - offsetX, edge.p1.y - offsetY);
+//                Point extendedP2 = new Point(edge.p2.x + offsetX, edge.p2.y + offsetY);
+//
 //                Imgproc.line(mask, extendedP1, extendedP2, new Scalar(255), 4);
-            }
-        }
+//            }
+//        }
 
-        contours.clear();
-        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//        contours.clear();
+//        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        filteredContours.clear();
+//        for (MatOfPoint contour : contours) {
+//            if (Imgproc.contourArea(contour) >= 20) {
+//                filteredContours.add(contour);
+//            }
+//        }
 
-        filteredContours.clear();
-        for (MatOfPoint contour : contours) {
-            if (Imgproc.contourArea(contour) >= 20) {
-                filteredContours.add(contour);
-            }
-        }
-
+        // Sort the discovered contours by total area
         filteredContours.sort((c1, c2) -> {
             double area1 = Imgproc.contourArea(c1);
             double area2 = Imgproc.contourArea(c2);
             return Double.compare(area2, area1);
         });
 
-        Mat clone = original.clone();
+        // Create clone for debug disk writing purposes
+        Mat clone = null;
+        if (writeToDisk)
+        {
+            clone = original.clone();
+        }
 
+        // For each contour, find it's "center"
+        // (a point visualizing its center, or its "focus" if it were an ellipse
+        // Put this found list of points in the legend
         for (MatOfPoint contour : filteredContours) {
             Moments moments = Imgproc.moments(contour);
             int cx = (int)(moments.get_m10() / moments.get_m00());
             int cy = (int)(moments.get_m01() / moments.get_m00());
             Point center = new Point(cx, cy);
 
-            Imgproc.circle(clone, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
-            Imgproc.circle(output, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
+            if (writeToDisk)
+            {
+                Imgproc.circle(clone, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
+                Imgproc.circle(output, center, 8, new Scalar(0, 255, 0), -1); // filled blue circle
+            }
 
             legend.revealPoints.add(center);
         }
 
-        Imgproc.drawContours(clone, filteredContours, -1, blueColor, 2);
-        Imgproc.drawContours(output, filteredContours, -1, blueColor, 2);
-
-        writeMatToDisk("blueFinal.png", clone, writeToDisk);
+        // Save debug images if necessary
+        if (writeToDisk)
+        {
+            Imgproc.drawContours(clone, filteredContours, -1, blueColor, 2);
+            Imgproc.drawContours(output, filteredContours, -1, blueColor, 2);
+            writeMatToDisk("blueFinal.png", clone);
+        }
     }
 
+    // Find walls on minimap
     public void drawWalls(Mat original, Mat output, boolean writeToDisk)
     {
-        // Convert to HSV
+        // Convert color encoding to HSV
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
 
-        writeMatToDisk("debug_mask.png", hsv, writeToDisk);
-
-        // Define HSV range for bright walls
+        // Use HSV in range openCV method to filter the majority of mat
         Scalar lowerBound1 = new Scalar(114, 50, 112);
         Scalar upperBound1 = new Scalar(120, 91, 203);
         Mat mask = new Mat();
         Core.inRange(hsv, lowerBound1, upperBound1, mask);
 
+        // Optionally save intermediary form of mask
         writeMatToDisk("walls.png", mask, writeToDisk);
 
-        // Find contours
+        // Find contours (segments of walls)
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        double minContourArea = 3; // Adjust depending on your image
-
+        // Filter contours by minimum size
+        double minContourArea = 4;
         List<MatOfPoint> filteredContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             if (Imgproc.contourArea(contour) >= minContourArea) {
@@ -329,62 +317,71 @@ public class MinimapExtractor
             }
         }
 
-        List<ContourEdge> edges = new ArrayList<>();
-        double maxConnectDistance = 60;
+//        ArrayList<ContourEdge> edges = new ArrayList<>();
+//        double maxConnectDistance = 60;
+//
+//        // Build lines connecting "close enough" wall segments
+//        for (int i = 0; i < filteredContours.size(); i++) {
+//            for (int j = i + 1; j < filteredContours.size(); j++) {
+//                MatOfPoint c1 = filteredContours.get(i);
+//                MatOfPoint c2 = filteredContours.get(j);
+//
+//                double bestDist = Double.MAX_VALUE;
+//                Point closest1 = null, closest2 = null;
+//
+//                for (Point p1 : c1.toArray()) {
+//                    for (Point p2 : c2.toArray()) {
+//                        double dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+//                        if (dist < bestDist) {
+//                            bestDist = dist;
+//                            closest1 = p1;
+//                            closest2 = p2;
+//                        }
+//                    }
+//                }
+//
+//                if (bestDist <= maxConnectDistance) {
+//                    edges.add(new ContourEdge(i, j, bestDist, closest1, closest2));
+//                }
+//            }
+//        }
+//
+//        Collections.sort(edges);
+//        UnionFind uf = new UnionFind(filteredContours.size());
+//
+//        for (ContourEdge edge : edges) {
+//            if (uf.union(edge.i, edge.j)) {
+//                Imgproc.line(mask, edge.p1, edge.p2, new Scalar(255), 2);
+//            }
+//        }
 
-        // Build all valid edges between contours
-        for (int i = 0; i < filteredContours.size(); i++) {
-            for (int j = i + 1; j < filteredContours.size(); j++) {
-                MatOfPoint c1 = filteredContours.get(i);
-                MatOfPoint c2 = filteredContours.get(j);
+//        contours.clear();
+//        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        filteredContours.clear();
+//        for (MatOfPoint contour : contours) {
+//            if (Imgproc.contourArea(contour) >= minContourArea) {
+//                filteredContours.add(contour);
+//            }
+//        }
 
-                double bestDist = Double.MAX_VALUE;
-                Point closest1 = null, closest2 = null;
+        legend.wallContours = contours;
 
-                for (Point p1 : c1.toArray()) {
-                    for (Point p2 : c2.toArray()) {
-                        double dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                        if (dist < bestDist) {
-                            bestDist = dist;
-                            closest1 = p1;
-                            closest2 = p2;
-                        }
-                    }
-                }
-
-                if (bestDist <= maxConnectDistance) {
-                    edges.add(new ContourEdge(i, j, bestDist, closest1, closest2));
-                }
-            }
+        // Save debug images if necessary
+        Mat clone = null;
+        if (writeToDisk)
+        {
+            clone = original.clone();
+            Imgproc.drawContours(clone, filteredContours, -1, wallColor, 2);
+            Imgproc.drawContours(output, filteredContours, -1, wallColor, 2);
+            writeMatToDisk("finalWalls.png", clone, writeToDisk);
         }
+    }
 
-        Collections.sort(edges);
-        UnionFind uf = new UnionFind(filteredContours.size());
-
-        for (ContourEdge edge : edges) {
-            if (uf.union(edge.i, edge.j)) {
-                Imgproc.line(mask, edge.p1, edge.p2, new Scalar(255), 2);
-            }
-        }
-
-        contours.clear();
-        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        Mat clone = original.clone();
-
-        filteredContours.clear();
-        for (MatOfPoint contour : contours) {
-            if (Imgproc.contourArea(contour) >= minContourArea) {
-                filteredContours.add(contour);
-            }
-        }
-
-        legend.contours = contours;
-
-        Imgproc.drawContours(clone, filteredContours, -1, wallColor, 2);
-        Imgproc.drawContours(output, filteredContours, -1, wallColor, 2);
-
-        writeMatToDisk("finalWalls.png", clone, writeToDisk);
+    // Write final minimap to disk
+    public void saveFinalMinimap(String path)
+    {
+        writeMatToDisk(path, fullMinimap, writeToDisk);
     }
 
     class ContourEdge implements Comparable<ContourEdge>

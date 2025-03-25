@@ -16,7 +16,6 @@ import java.awt.image.DataBufferByte;
 public class Main
 {
     static { nu.pattern.OpenCV.loadLocally(); }
-    static Timer timer = new Timer();
     static SmartBot robot;
 
     private static void init()
@@ -30,45 +29,37 @@ public class Main
         }
     }
 
+    static final boolean writeToDisk = true;
+
     public static void main(String[] args)
     {
         init();
 
         if (args.length != 1)
         {
-            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/minimap1.png";
+            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
             Mat original = Imgcodecs.imread(imagePath);
 
-            timer.start();
-
-            MinimapExtractor minimap = new MinimapExtractor();
-
-            minimap.resolve(original, true);
-
-            Point p = minimap.findOptimalRevealAngle();
-
-            Point screenPoint = Legend.convertMinimapPointToScreen(p);
-
-            robot.mouseMove((int) Math.round(screenPoint.x), (int) Math.round(screenPoint.y));
-
-            timer.stop();
-
-            Imgcodecs.imwrite("final.png", minimap.fullMinimap);
+            Timer.start();
+            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+            minimap.resolve(original);
+            minimap.saveFinalMinimap("final.png");
+            Timer.stop();
         }
 
         else if (args[0].equals("-l"))
         {
             Mat original = getScreenshot();
 
-            MinimapExtractor minimap = new MinimapExtractor();
-            minimap.resolve(original, true);
+            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+            minimap.resolve(original);
             Point p = minimap.findOptimalRevealAngle();
 
-            Point screenPoint = Legend.convertMinimapPointToScreen(p);
+//            Point screenPoint = Legend.convertMinimapPointToScreen(p);
 
-            robot.mouseMoveGeneralLocation(screenPoint);
+//            robot.mouseMoveGeneralLocation(screenPoint);
 
-            Imgcodecs.imwrite("final.png", minimap.fullMinimap);
+            minimap.saveFinalMinimap("final.png");
         }
     }
 
