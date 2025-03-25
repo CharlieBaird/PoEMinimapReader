@@ -9,6 +9,24 @@ import com.charliebaird.utility.Timer;
 
 import java.util.*;
 
+/*
+
+POINTS
+X: 690 Y: 98 {657.0, 341.0}
+X: 704 Y: 434 {666.0, 386.0}
+X: 611 Y: 652 {660.0, 408.0}
+X: 795 Y: 965 {681.0, 432.0}
+X: 1007 Y: 251 {699.0, 363.0}
+X: 1060 Y: 452 {705.0, 388.0}
+X: 1279 Y: 300 {733.0, 369.0}
+X: 1345 Y: 714 {731.0, 413.0}
+X: 1587 Y: 433 {768.0, 386.0}
+DOOR
+X: 271 Y: 113 {626.0, 352.0}
+PORTAL
+X: 1027 Y: 10 {703.0, 337.0}
+ */
+
 public class MinimapExtractor
 {
     static {
@@ -32,6 +50,8 @@ public class MinimapExtractor
     {
         original = original.submat(new Rect(259, 125, original.width() - 259 - 259, original.height() - 145 - 145));
 
+        System.out.println(original.size());
+
         Mat minimap = Mat.zeros(original.size(), original.type());
 
         legend = new Legend();
@@ -51,6 +71,18 @@ public class MinimapExtractor
             drawPlayer(minimap);
 
         fullMinimap = minimap;
+    }
+
+    public Point findOptimalRevealAngle()
+    {
+        Point p = legend.findOptimalPoint(fullMinimap);
+
+        if (p != null)
+        {
+            Imgproc.circle(fullMinimap, p, 16, new Scalar(203, 192, 255), -1);
+        }
+
+        return p;
     }
 
     private final Scalar wallColor = new Scalar(180, 180, 180);
@@ -84,7 +116,7 @@ public class MinimapExtractor
 
     public void drawSprites(Mat original, Mat output, boolean writeToDisk)
     {
-        ArrayList<Point> matchPoints = findSpriteLocations(original, sulphiteMat, 0.6);
+        ArrayList<Point> matchPoints = findSpriteLocations(original, sulphiteMat, 0.75);
 
         for (Point p : matchPoints) {
             Imgproc.circle(output, p, 8, new Scalar(0, 255, 255), -1);
@@ -96,16 +128,18 @@ public class MinimapExtractor
             Imgproc.circle(output, p, 8, new Scalar(255, 213, 144), -1);
         }
 
-        matchPoints = findSpriteLocations(original, itemMat, 0.75);
+        matchPoints = findSpriteLocations(original, itemMat, 0.6);
 
         for (Point p : matchPoints) {
             Imgproc.circle(output, p, 8, new Scalar(200, 255, 200), -1);
         }
 
-        matchPoints = findSpriteLocations(original, doorMat, 0.75);
+        matchPoints = findSpriteLocations(original, doorMat, 0.65);
 
         for (Point p : matchPoints) {
             Imgproc.circle(output, p, 8, new Scalar(0, 165, 255), -1);
+            System.out.println(p);
+            Imgcodecs.imwrite("final.png", output);
         }
     }
 
@@ -120,9 +154,6 @@ public class MinimapExtractor
         grayTemplate = spriteTemplate;
 
 //        Imgproc.GaussianBlur(spriteTemplate, grayScreen, new Size(3, 3), 0);
-
-//        Imgproc.cvtColor(screen, grayScreen, Imgproc.COLOR_BGR2GRAY);
-//        Imgproc.cvtColor(spriteTemplate, grayTemplate, Imgproc.COLOR_BGR2GRAY);
 
         double[] scales = {1.0};
 
@@ -246,7 +277,7 @@ public class MinimapExtractor
                 Point extendedP1 = new Point(edge.p1.x - offsetX, edge.p1.y - offsetY);
                 Point extendedP2 = new Point(edge.p2.x + offsetX, edge.p2.y + offsetY);
 
-                Imgproc.line(mask, extendedP1, extendedP2, new Scalar(255), 4);
+//                Imgproc.line(mask, extendedP1, extendedP2, new Scalar(255), 4);
             }
         }
 
@@ -303,7 +334,7 @@ public class MinimapExtractor
         writeMatToDisk("walls.png", mask, writeToDisk);
 
         // Find contours
-        List<MatOfPoint> contours = new ArrayList<>();
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -365,6 +396,8 @@ public class MinimapExtractor
                 filteredContours.add(contour);
             }
         }
+
+        legend.contours = contours;
 
         Imgproc.drawContours(clone, filteredContours, -1, wallColor, 2);
         Imgproc.drawContours(output, filteredContours, -1, wallColor, 2);

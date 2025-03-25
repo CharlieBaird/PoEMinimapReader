@@ -4,9 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Abstract sulphite detector to a sprite detector">
+    <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Sprite finding">
+      <change afterPath="$PROJECT_DIR$/src/scripts/linreg.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -97,7 +99,7 @@
       <updated>1742762581965</updated>
       <workItem from="1742762582942" duration="14368000" />
       <workItem from="1742792559655" duration="10853000" />
-      <workItem from="1742872278304" duration="11216000" />
+      <workItem from="1742872278304" duration="17238000" />
     </task>
     <task id="LOCAL-00001" summary="Happy with minimap">
       <option name="closed" value="true" />
@@ -163,7 +165,15 @@
       <option name="project" value="LOCAL" />
       <updated>1742881566407</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Sprite finding">
+      <option name="closed" value="true" />
+      <created>1742883827467</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1742883827467</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -215,6 +225,18 @@
     <MESSAGE value="Change filters from RGB to BGR" />
     <MESSAGE value="Add sulphite detector" />
     <MESSAGE value="Abstract sulphite detector to a sprite detector" />
-    <option name="LAST_COMMIT_MESSAGE" value="Abstract sulphite detector to a sprite detector" />
+    <MESSAGE value="Sprite finding" />
+    <option name="LAST_COMMIT_MESSAGE" value="Sprite finding" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java</url>
+          <line>73</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

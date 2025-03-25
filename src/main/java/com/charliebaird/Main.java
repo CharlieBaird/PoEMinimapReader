@@ -1,18 +1,16 @@
 package com.charliebaird;
 
+import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
+import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 public class Main
 {
@@ -35,7 +33,9 @@ public class Main
     {
         if (args.length != 1)
         {
-            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/minimap3.png";
+            init();
+
+            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/minimap1.png";
             Mat original = Imgcodecs.imread(imagePath);
 
             timer.start();
@@ -43,6 +43,12 @@ public class Main
             MinimapExtractor minimap = new MinimapExtractor();
 
             minimap.resolve(original, true);
+
+            Point p = minimap.findOptimalRevealAngle();
+
+            Point screenPoint = Legend.convertMinimapPointToScreen(p);
+
+            robot.mouseMove((int) Math.round(screenPoint.x), (int) Math.round(screenPoint.y));
 
             timer.stop();
 
@@ -57,6 +63,7 @@ public class Main
 
             MinimapExtractor minimap = new MinimapExtractor();
             minimap.resolve(original, true);
+            minimap.findOptimalRevealAngle();
 //            timer.stop();
 
             Imgcodecs.imwrite("final.png", minimap.fullMinimap);
