@@ -4,7 +4,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 
-import java.util.ArrayList;
+import java.util.*;
+import java.util.stream.Collectors;
 
 // Generated structure from minimap of detected objects in map (sulphite, dropped items, reveal points)
 public class Legend
@@ -36,28 +37,26 @@ public class Legend
         doorPoints = new ArrayList<>();
     }
 
-    public Point findOptimalPoint(Mat minimap) {
+    public Point findOptimalPoint(Mat minimap, int n) {
         if (revealPoints == null || revealPoints.isEmpty() || wallContours == null || wallContours.isEmpty() || minimap == null) {
             return null;
         }
 
         Point center = new Point(minimap.cols() / 2.0, minimap.rows() / 2.0);
-        Point bestPoint = null;
-        double bestScore = Double.MAX_VALUE;
 
-        for (Point revealPoint : revealPoints) {
-            double centerDist = euclideanDistance(revealPoint, center);
-            double contourDist = distanceToNearestContour(revealPoint, wallContours);
-            double score = centerDist - contourDist;
+        List<Point> sortedPoints = revealPoints.stream()
+                .map(p -> new AbstractMap.SimpleEntry<>(p, euclideanDistance(p, center) - distanceToNearestContour(p, wallContours)))
+                .sorted(Comparator.comparingDouble(Map.Entry::getValue))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
 
-            if (score < bestScore) {
-                bestScore = score;
-                bestPoint = revealPoint;
-            }
+        if (n < 0 || n >= sortedPoints.size()) {
+            return null;
         }
 
-        return bestPoint;
+        return sortedPoints.get(n);
     }
+
 
     private static double euclideanDistance(Point p1, Point p2) {
         return Math.hypot(p1.x - p2.x, p1.y - p2.y);

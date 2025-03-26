@@ -56,15 +56,15 @@ public class Main
                 MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
                 minimap.resolve(original);
                 Timer.stop();
-                Point p = minimap.findOptimalRevealAngle();
-                if (p != null)
-                {
-                    Point screenPoint = Legend.convertMinimapPointToScreen(p);
+//                Point p = minimap.findOptimalRevealAngle();
+//                if (p != null)
+//                {
+//                    Point screenPoint = Legend.convertMinimapPointToScreen(p);
 
 //                    robot.mouseMoveGeneralLocation(screenPoint);
-                }
+//                }
 
-                minimap.saveFinalMinimap("final.png");
+//                minimap.saveFinalMinimap("final.png");
             }
 
             else if (args[0].equals("-r"))
@@ -76,22 +76,23 @@ public class Main
 
                     MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
                     minimap.resolve(original);
+                    robot.moveCharacter(minimap);
+                    robot.holdRightClick();
                     Timer.stop();
 
-                    Point p = minimap.findOptimalRevealAngle();
-                    if (p != null)
-                    {
-                        Point screenPoint = Legend.convertMinimapPointToScreen(p);
 
-                        robot.mouseMoveGeneralLocation(screenPoint);
-                        robot.holdRightClick();
+//                    if (p != null)
+//                    {
 
-                    }
+//                        robot.moveCharacter(minimap);
+
+
+//                    }
                 }
                 robot.releaseRightClick();
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         } finally {
             robot.releaseRightClick();
         }

@@ -53,7 +53,7 @@ public class MinimapExtractor
 
         // Detect unrevealed (blue lines) patches on the minimap
         // Stores these areas in the legend
-//        drawBlue(original, minimap, writeToDisk);
+        drawBlue(original, minimap, writeToDisk);
 
         // Detect walls in image (gray lines)
         // Stores these in the legend
@@ -71,11 +71,11 @@ public class MinimapExtractor
     }
 
     // Looks at the list of unrevealed sectors in the minimap,
-    // and finds the optimal one to travel to
+    // and finds the nth optimal one to travel to
     // If absolutely no point is found, returns null
-    public Point findOptimalRevealAngle()
+    public Point findOptimalRevealAngle(int n)
     {
-        Point p = legend.findOptimalPoint(fullMinimap);
+        Point p = legend.findOptimalPoint(fullMinimap, n);
 
         // Circles the optimal reveal point
         if (writeToDisk && p != null)
