@@ -6,10 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d6606ad7-055a-4f9a-8fc4-6ba66930e334" name="Changes" comment="Add Mouse movement API">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/Legend.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Minimap/MinimapExtractor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/charliebaird/Robot/SmartBot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/charliebaird/Robot/SmartBot.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,6 +113,8 @@
       <workItem from="1742872278304" duration="18395000" />
       <workItem from="1742929092945" duration="9339000" />
       <workItem from="1742944604622" duration="1181000" />
+      <workItem from="1743978909690" duration="2224000" />
+      <workItem from="1743994874776" duration="594000" />
     </task>
     <task id="LOCAL-00001" summary="Happy with minimap">
       <option name="closed" value="true" />
