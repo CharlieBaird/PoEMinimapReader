@@ -2,17 +2,10 @@ package com.charliebaird;
 
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.PoEBot.PoEBot;
-import com.charliebaird.utility.MatIO;
+import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-
-import static com.charliebaird.utility.MatIO.getScreenshot;
 
 public class Main
 {
@@ -39,7 +32,7 @@ public class Main
             else if (args[0].equals("-l"))
             {
                 Timer.start();
-                Mat original = MatIO.getScreenshot();
+                Mat original = ScreenCapture.captureScreenMat();
                 Timer.stop();
 
                 Timer.start();
