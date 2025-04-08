@@ -22,6 +22,23 @@ public class TeensyBot
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             teensy.close();
             System.out.println("Teensy connection closed");
+
+            // Safety: unpress / unclick anything held down on a crash
+            for (KeyCode key : HeldKeys)
+            {
+                System.out.println("Exiting, releasing "+ key.getSerialValue());
+                delayMS(10);
+                keyRelease(key);
+                delayMS(10);
+            }
+
+            for (MouseCode key : HeldMouseClicks)
+            {
+                System.out.println("Exiting, releasing "+ key.getSerialValue());
+                delayMS(10);
+                mouseRelease(key);
+                delayMS(10);
+            }
         }));
     }
 
@@ -49,7 +66,6 @@ public class TeensyBot
     private final Set<KeyCode> HeldKeys;
     private final Set<MouseCode> HeldMouseClicks;
 
-
     public void mouseClick(MouseCode mouseCode)
     {
         String serial = mouseCode.getSerialValue();
@@ -58,6 +74,7 @@ public class TeensyBot
             teensy.mousePress(serial);
             delayMS(50);
             teensy.mouseRelease(serial);
+            HeldMouseClicks.remove(mouseCode);
         }
         else {
             mouseRelease(mouseCode);
@@ -68,8 +85,13 @@ public class TeensyBot
     {
         String serial = mouseCode.getSerialValue();
         if (!HeldMouseClicks.contains(mouseCode)) {
+            System.out.println("Pressing " + serial);
             HeldMouseClicks.add(mouseCode);
             teensy.mousePress(serial);
+        }
+        else
+        {
+            System.out.println("Already pressing " + serial);
         }
     }
 
@@ -77,8 +99,12 @@ public class TeensyBot
     {
         String serial = mouseCode.getSerialValue();
         if (HeldMouseClicks.contains(mouseCode)) {
+            System.out.println("Releasing " + serial);
             HeldMouseClicks.remove(mouseCode);
             teensy.mouseRelease(serial);
+        }
+        else {
+            System.out.println("Cannot release " + serial);
         }
     }
 

@@ -6,7 +6,10 @@ import com.github.joonasvali.naturalmouse.api.SystemCalls;
 import com.github.joonasvali.naturalmouse.support.*;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
+import com.github.joonasvali.naturalmouse.util.FlowTemplates;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 
@@ -19,13 +22,14 @@ public class MouseMotionHandler
 
     private MouseMotionFactory getGeneralLocationFactory()
     {
+        ArrayList<Flow> flows = new ArrayList<>(Arrays.asList(
+                new Flow(FlowTemplates.variatingFlow()),
+                new Flow(FlowTemplates.slowStartup2Flow()),
+                new Flow(FlowTemplates.adjustingFlow()),
+                new Flow(FlowTemplates.jaggedFlow())
+        ));
+
         MouseMotionFactory factory = new MouseMotionFactory(new DefaultMouseMotionNature());
-//        List<Flow> flows = new ArrayList<>(Arrays.asList(
-//                new Flow(FlowTemplates.variatingFlow()),
-//                new Flow(FlowTemplates.slowStartup2Flow()),
-//                new Flow(FlowTemplates.adjustingFlow()),
-//                new Flow(FlowTemplates.jaggedFlow())
-//        ));
 
         factory.setDeviationProvider(new SinusoidalDeviationProvider(SinusoidalDeviationProvider.DEFAULT_SLOPE_DIVIDER));
         factory.setNoiseProvider(new DefaultNoiseProvider(20));
@@ -33,8 +37,8 @@ public class MouseMotionHandler
         factory.getNature().setSystemCalls(new TeensySystemCalls(teensyController));
         factory.getNature().setMouseInfo(new TeensyMouseAccessor());
 
-//        DefaultSpeedManager manager = new DefaultSpeedManager(flows);
-        DefaultSpeedManager manager = new DefaultSpeedManager();
+        DefaultSpeedManager manager = new DefaultSpeedManager(flows);
+//        DefaultSpeedManager manager = new DefaultSpeedManager();
         manager.setMouseMovementBaseTimeMs(250);
         factory.setSpeedManager(manager);
 

@@ -3,13 +3,24 @@ package com.charliebaird.PoEBot;
 import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.teensybottinglib.TeensyBot;
-import org.opencv.core.Point;
+
+import java.awt.*;
 
 public class PoEBot extends TeensyBot
 {
     public PoEBot()
     {
         super();
+    }
+
+    public void mouseMoveGeneralLocation(org.opencv.core.Point p)
+    {
+        super.mouseMoveGeneralLocation(new Point((int) Math.round(p.x), (int) Math.round(p.y)));
+    }
+
+    public void mouseMoveExactLocation(org.opencv.core.Point p)
+    {
+        super.mouseMoveExactLocation(new Point((int) Math.round(p.x), (int) Math.round(p.y)));
     }
 
 
