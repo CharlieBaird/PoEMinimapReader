@@ -7,6 +7,12 @@ import org.opencv.core.Point;
 
 public class PoEBot extends TeensyBot
 {
+    public PoEBot()
+    {
+        super();
+    }
+
+
 //    public void moveCharacter(MinimapExtractor minimap)
 //    {
 //        int index = 0;

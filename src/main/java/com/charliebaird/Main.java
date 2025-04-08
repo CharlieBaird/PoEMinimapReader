@@ -2,6 +2,7 @@ package com.charliebaird;
 
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.PoEBot.PoEBot;
+import com.charliebaird.utility.MatIO;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -10,6 +11,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+
+import static com.charliebaird.utility.MatIO.getScreenshot;
 
 public class Main
 {
@@ -21,38 +24,40 @@ public class Main
     {
         PoEBot teensyBot = new PoEBot();
 
+            if (args.length != 1)
+            {
+                String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
+                Mat original = Imgcodecs.imread(imagePath);
 
-//        try {
-//            if (args.length != 1)
-//            {
-//                String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
-//                Mat original = Imgcodecs.imread(imagePath);
-//
-//                Timer.start();
-//                MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-//                minimap.resolve(original);
-//                Timer.stop();
+                Timer.start();
+                MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+                minimap.resolve(original);
+                Timer.stop();
+                minimap.saveFinalMinimap("final.png");
+            }
+
+            else if (args[0].equals("-l"))
+            {
+                Timer.start();
+                Mat original = MatIO.getScreenshot();
+                Timer.stop();
+
+                Timer.start();
+                MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+                minimap.resolve(original);
+                Timer.stop();
+                minimap.saveFinalMinimap("final.png");
+
+//                Point p = minimap.findOptimalRevealAngle();
+//                if (p != null)
+//                {
+//                    Point screenPoint = Legend.convertMinimapPointToScreen(p);
+
+//                    robot.mouseMoveGeneralLocation(screenPoint);
+//                }
+
 //                minimap.saveFinalMinimap("final.png");
-//            }
-//
-//            else if (args[0].equals("-l"))
-//            {
-//                Timer.start();
-//                Mat original = getScreenshot();
-//
-//                MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-//                minimap.resolve(original);
-//                Timer.stop();
-////                Point p = minimap.findOptimalRevealAngle();
-////                if (p != null)
-////                {
-////                    Point screenPoint = Legend.convertMinimapPointToScreen(p);
-//
-////                    robot.mouseMoveGeneralLocation(screenPoint);
-////                }
-//
-////                minimap.saveFinalMinimap("final.png");
-//            }
+            }
 //
 //            else if (args[0].equals("-r"))
 //            {
@@ -78,11 +83,6 @@ public class Main
 //                }
 //                robot.releaseRightClick();
 //            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            robot.releaseRightClick();
-//        }
     }
 
 }
