@@ -55,7 +55,7 @@ public class Main
         else if (args[0].equals("-r"))
         {
             MapRunner runner = new MapRunner();
-            for (int i=0; i<20; i++)
+            for (int i=0; i<40; i++)
             {
                 runner.runIteration();
             }

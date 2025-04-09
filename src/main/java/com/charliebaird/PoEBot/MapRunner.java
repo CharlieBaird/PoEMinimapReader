@@ -2,6 +2,7 @@ package com.charliebaird.PoEBot;
 
 import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
+import com.charliebaird.TeensyBottingLib.InputCodes.KeyCode;
 import com.charliebaird.TeensyBottingLib.InputCodes.MouseCode;
 import com.charliebaird.utility.ScreenCapture;
 import org.opencv.core.Mat;
@@ -9,6 +10,8 @@ import org.opencv.core.Point;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MapRunner
 {
@@ -72,7 +75,14 @@ public class MapRunner
         {
             Point screenPoint = Legend.convertMinimapPointToScreen(point);
 
+            // todo move this to a separate thread?
             bot.mouseMoveGeneralLocation(screenPoint);
+
+            // 1 in 5 chance
+            if (ThreadLocalRandom.current().nextInt(1, 6) > 4)
+            {
+                bot.keyClick(KeyCode.SPACE);
+            }
         }
 
         bot.mousePress(MouseCode.LEFT);
@@ -97,6 +107,13 @@ public class MapRunner
             for (int j = 0; j < count; j++) {
                 Point recent = recentSelections.get(recentSelections.size() - 1 - j);
                 double distance = Legend.euclideanDistance(p, recent);
+
+                // If distance is too close, we might be stuck, so punish this point
+                if (distance < 10) {
+                    proximityScore = -100;
+                    continue;
+                }
+
                 // Inverse distance: closer = higher score (avoid div by zero)
                 proximityScore += 1.0 / (distance + 1e-5);
             }
