@@ -1,11 +1,11 @@
-package com.charliebaird.teensybottinglib;
+package com.charliebaird.TeensyBottingLib;
 
 import com.fazecast.jSerialComm.SerialPort;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-public class TeensyController
+public class TeensyIO
 {
     private SerialPort port;
     private PrintWriter writer;
@@ -23,12 +23,12 @@ public class TeensyController
         return portsList;
     }
 
-    public TeensyController()
+    public TeensyIO()
     {
         this(getComForTeensy());
     }
 
-    public TeensyController(ArrayList<String> ports)
+    public TeensyIO(ArrayList<String> ports)
     {
         for (String portDescriptor : ports)
         {
@@ -68,6 +68,11 @@ public class TeensyController
     public void mouseMove(int x, int y)
     {
         sendCommand("MOUSE MOVE " + x + " " + y);
+    }
+
+    public void mouseMoveRelative(int x, int y)
+    {
+        sendCommand("MOUSE MOVEREL " + x + " " + y);
     }
 
     public void mousePress(String button)

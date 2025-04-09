@@ -37,7 +37,7 @@ public class Legend
         doorPoints = new ArrayList<>();
     }
 
-    public Point findOptimalPoint(Mat minimap, int n) {
+    public List<Point> findRevealPoints(Mat minimap) {
         if (revealPoints == null || revealPoints.isEmpty() || wallContours == null || wallContours.isEmpty() || minimap == null) {
             return null;
         }
@@ -50,15 +50,11 @@ public class Legend
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
-        if (n < 0 || n >= sortedPoints.size()) {
-            return null;
-        }
-
-        return sortedPoints.get(n);
+        return sortedPoints;
     }
 
 
-    private static double euclideanDistance(Point p1, Point p2) {
+    public static double euclideanDistance(Point p1, Point p2) {
         return Math.hypot(p1.x - p2.x, p1.y - p2.y);
     }
 

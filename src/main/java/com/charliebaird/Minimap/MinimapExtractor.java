@@ -5,7 +5,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.charliebaird.Minimap.MinimapVisuals.*;
 
@@ -70,20 +71,17 @@ public class MinimapExtractor
         fullMinimap = minimap;
     }
 
-    // Looks at the list of unrevealed sectors in the minimap,
-    // and finds the nth optimal one to travel to
-    // If absolutely no point is found, returns null
-    public Point findOptimalRevealAngle(int n)
+    public List<Point> findRevealPoints()
     {
-        Point p = legend.findOptimalPoint(fullMinimap, n);
+        List<Point> points = legend.findRevealPoints(fullMinimap);
 
         // Circles the optimal reveal point
-        if (writeToDisk && p != null)
-        {
-            Imgproc.circle(fullMinimap, p, 16, new Scalar(203, 192, 255), -1);
-        }
+//        if (writeToDisk && p != null)
+//        {
+//            Imgproc.circle(fullMinimap, p, 16, new Scalar(203, 192, 255), -1);
+//        }
 
-        return p;
+        return points;
     }
 
     // Finds all sprite locations in the mat and optionally marks them on the output minimap

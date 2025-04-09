@@ -1,6 +1,7 @@
-package com.charliebaird.teensybottinglib;
+package com.charliebaird.TeensyBottingLib;
 
-import com.charliebaird.teensybottinglib.InputCodes.*;
+import com.charliebaird.TeensyBottingLib.InputCodes.KeyCode;
+import com.charliebaird.TeensyBottingLib.InputCodes.MouseCode;
 
 import java.awt.*;
 import java.util.HashSet;
@@ -9,11 +10,11 @@ import java.util.Set;
 public class TeensyBot
 {
     private final MouseMotionHandler mouseMotionHandler;
-    private final TeensyController teensy;
+    private final TeensyIO teensy;
 
     public TeensyBot()
     {
-        teensy = new TeensyController();
+        teensy = new TeensyIO();
         mouseMotionHandler = new MouseMotionHandler(teensy);
         HeldKeys = new HashSet<>();
         HeldMouseClicks = new HashSet<>();
@@ -61,6 +62,11 @@ public class TeensyBot
     public void mouseMoveExactLocation(Point p)
     {
         mouseMotionHandler.mouseMoveExactLocation(p.x, p.y);
+    }
+
+    public void mouseMoveRelative(Point p)
+    {
+        mouseMotionHandler.mouseMoveRelative(p.x, p.y);
     }
 
     private final Set<KeyCode> HeldKeys;

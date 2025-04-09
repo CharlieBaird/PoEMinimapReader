@@ -1,9 +1,11 @@
 package com.charliebaird.utility;
 
-import java.awt.*;
-import java.awt.image.*;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 
 public class ScreenCapture {
     public static Robot robot;
