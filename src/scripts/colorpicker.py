@@ -5,30 +5,33 @@ def nothing(x):
     pass
 
 # Load image
-image = cv2.imread('../../minimap3.png')
+image = cv2.imread('../../samples/output/scanner413.png')
+
+if image is None:
+    raise ValueError("Image failed to load. Check the file path.")
+
+# Resize if image is very small (optional)
+min_size = 100  # adjust as needed
+height, width = image.shape[:2]
+if height < min_size or width < min_size:
+    scale = max(min_size / height, min_size / width)
+    image = cv2.resize(image, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_NEAREST)
 
 # Create a window
-cv2.namedWindow('image')
+cv2.namedWindow('image', cv2.WINDOW_NORMAL)  # allows resizing manually
 
-# Create trackbars for color change
-# Hue is from 0-179 for Opencv
+# Trackbars
 cv2.createTrackbar('HMin', 'image', 0, 179, nothing)
 cv2.createTrackbar('SMin', 'image', 0, 255, nothing)
 cv2.createTrackbar('VMin', 'image', 0, 255, nothing)
-cv2.createTrackbar('HMax', 'image', 0, 179, nothing)
-cv2.createTrackbar('SMax', 'image', 0, 255, nothing)
-cv2.createTrackbar('VMax', 'image', 0, 255, nothing)
+cv2.createTrackbar('HMax', 'image', 179, 179, nothing)
+cv2.createTrackbar('SMax', 'image', 255, 255, nothing)
+cv2.createTrackbar('VMax', 'image', 255, 255, nothing)
 
-# Set default value for Max HSV trackbars
-cv2.setTrackbarPos('HMax', 'image', 179)
-cv2.setTrackbarPos('SMax', 'image', 255)
-cv2.setTrackbarPos('VMax', 'image', 255)
+# Previous values
+phMin = psMin = pvMin = phMax = psMax = pvMax = -1
 
-# Initialize HSV min/max values
-hMin = sMin = vMin = hMax = sMax = vMax = 0
-phMin = psMin = pvMin = phMax = psMax = pvMax = 0
-
-while(1):
+while True:
     # Get current positions of all trackbars
     hMin = cv2.getTrackbarPos('HMin', 'image')
     sMin = cv2.getTrackbarPos('SMin', 'image')
@@ -37,26 +40,19 @@ while(1):
     sMax = cv2.getTrackbarPos('SMax', 'image')
     vMax = cv2.getTrackbarPos('VMax', 'image')
 
-    # Set minimum and maximum HSV values to display
+    # Thresholding
     lower = np.array([hMin, sMin, vMin])
     upper = np.array([hMax, sMax, vMax])
-
-    # Convert to HSV format and color threshold
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower, upper)
     result = cv2.bitwise_and(image, image, mask=mask)
 
-    # Print if there is a change in HSV value
-    if((phMin != hMin) | (psMin != sMin) | (pvMin != vMin) | (phMax != hMax) | (psMax != sMax) | (pvMax != vMax) ):
-        print("(hMin = %d , sMin = %d, vMin = %d), (hMax = %d , sMax = %d, vMax = %d)" % (hMin , sMin , vMin, hMax, sMax , vMax))
-        phMin = hMin
-        psMin = sMin
-        pvMin = vMin
-        phMax = hMax
-        psMax = sMax
-        pvMax = vMax
+    # Print HSV values if changed
+    if (hMin, sMin, vMin, hMax, sMax, vMax) != (phMin, psMin, pvMin, phMax, psMax, pvMax):
+        print(f"(hMin = {hMin}, sMin = {sMin}, vMin = {vMin}) | (hMax = {hMax}, sMax = {sMax}, vMax = {vMax})")
+        phMin, psMin, pvMin, phMax, psMax, pvMax = hMin, sMin, vMin, hMax, sMax, vMax
 
-    # Display result image
+    # Display
     cv2.imshow('image', result)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break

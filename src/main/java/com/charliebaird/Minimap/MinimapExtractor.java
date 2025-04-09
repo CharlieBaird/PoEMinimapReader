@@ -45,6 +45,8 @@ public class MinimapExtractor
         // Crop original mat, removing outer UI elements
 //        original = original.submat(new Rect(259, 125, original.width() - 259 - 259, original.height() - 145 - 145));
 
+        writeMatToDisk("original.png", original, writeToDisk);
+
         // Create a black minimap of same size as cropped mat
         Mat minimap = Mat.zeros(original.size(), original.type());
 

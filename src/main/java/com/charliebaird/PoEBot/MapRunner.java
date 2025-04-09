@@ -2,8 +2,8 @@ package com.charliebaird.PoEBot;
 
 import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
-import com.charliebaird.TeensyBottingLib.InputCodes.KeyCode;
-import com.charliebaird.TeensyBottingLib.InputCodes.MouseCode;
+import com.TeensyBottingLib.InputCodes.KeyCode;
+import com.TeensyBottingLib.InputCodes.MouseCode;
 import com.charliebaird.utility.ScreenCapture;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -23,6 +23,9 @@ public class MapRunner
     private final IntermittentAttacker intermittentAttacker;
     private final Thread intermittentAttackerThread;
 
+    private final ScreenScanner screenScanner;
+    private final Thread screenScannerThread;
+
     public MapRunner()
     {
         bot = new PoEBot();
@@ -34,6 +37,10 @@ public class MapRunner
         intermittentAttacker = new IntermittentAttacker(bot);
         intermittentAttackerThread = new Thread(intermittentAttacker);
         intermittentAttackerThread.start();
+
+        screenScanner = new ScreenScanner(bot);
+        screenScannerThread = new Thread(screenScanner);
+        screenScannerThread.start();
     }
 
     public void openMap() {}
@@ -44,6 +51,7 @@ public class MapRunner
 
         mouseJiggler.stop();
         intermittentAttacker.stop();
+        screenScanner.stop();
 
         try {
             mouseJigglerThread.join();
