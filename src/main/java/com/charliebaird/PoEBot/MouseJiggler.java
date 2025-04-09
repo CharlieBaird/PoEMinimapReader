@@ -22,7 +22,7 @@ public class MouseJiggler implements Runnable
                 int dy;
 
                 int rand = ThreadLocalRandom.current().nextInt(0, 10);
-                if (rand >= 0)
+                if (rand >= 8)
                 {
                     dx = ThreadLocalRandom.current().nextInt(-8, 9); // -1, 0, or 1
                     dy = ThreadLocalRandom.current().nextInt(-8, 9);
@@ -32,7 +32,6 @@ public class MouseJiggler implements Runnable
                     dy = ThreadLocalRandom.current().nextInt(-1, 2);
                 }
 
-                System.out.println("Moving to " + dx + " " + dy);
                 bot.mouseMoveRelative(new Point(dx, dy));
 
                 Thread.sleep(ThreadLocalRandom.current().nextInt(20, 1200));

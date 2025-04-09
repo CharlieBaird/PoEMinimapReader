@@ -12,11 +12,25 @@ import java.util.List;
 
 public class MapRunner
 {
-    private PoEBot bot;
+    private final PoEBot bot;
+
+    private final MouseJiggler mouseJiggler;
+    private final Thread mouseJigglerThread;
+
+    private final IntermittentAttacker intermittentAttacker;
+    private final Thread intermittentAttackerThread;
 
     public MapRunner()
     {
         bot = new PoEBot();
+
+        mouseJiggler = new MouseJiggler(bot);
+        mouseJigglerThread = new Thread(mouseJiggler);
+        mouseJigglerThread.start();
+
+        intermittentAttacker = new IntermittentAttacker(bot);
+        intermittentAttackerThread = new Thread(intermittentAttacker);
+        intermittentAttackerThread.start();
     }
 
     public void openMap() {}
@@ -24,13 +38,23 @@ public class MapRunner
     public void exitMap()
     {
         bot.mouseRelease(MouseCode.LEFT);
+
+        mouseJiggler.stop();
+        intermittentAttacker.stop();
+
+        try {
+            mouseJigglerThread.join();
+            intermittentAttackerThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private final List<Point> recentSelections = new ArrayList<Point>();
     public void runIteration()
     {
         Mat original = ScreenCapture.captureScreenMat();
-        MinimapExtractor minimap = new MinimapExtractor(false);
+        MinimapExtractor minimap = new MinimapExtractor(true);
         minimap.resolve(original);
 
         List<Point> revealPoints = minimap.findRevealPoints();
@@ -52,11 +76,6 @@ public class MapRunner
         }
 
         bot.mousePress(MouseCode.LEFT);
-
-        if (Math.random() < 0.45)
-        {
-            bot.mouseClick(MouseCode.RIGHT);
-        }
     }
 
     private static final double LIST_POSITION_WEIGHT = 1.0;
@@ -83,8 +102,8 @@ public class MapRunner
             }
 
             double totalScore = listScore + (DISTANCE_WEIGHT * proximityScore);
-            System.out.printf("  List Score: %.2f, Proximity Score: %.5f, Total Score: %.5f%n",
-                    listScore, proximityScore * DISTANCE_WEIGHT, totalScore);
+//            System.out.printf("  List Score: %.2f, Proximity Score: %.5f, Total Score: %.5f%n",
+//                    listScore, proximityScore * DISTANCE_WEIGHT, totalScore);
             if (totalScore > bestScore) {
                 bestScore = totalScore;
                 bestPoint = p;

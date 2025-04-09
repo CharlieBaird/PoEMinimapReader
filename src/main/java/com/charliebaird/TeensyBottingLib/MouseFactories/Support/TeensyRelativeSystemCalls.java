@@ -23,6 +23,5 @@ public class TeensyRelativeSystemCalls extends SystemCallsParent
         int dy = relativeMouseAccessor.getMousePosition().y - y;
         relativeMouseAccessor.setLoc(new Point(x, y));
         teensyIO.mouseMoveRelative(dx, dy);
-        System.out.println("Setting position");
     }
 }
