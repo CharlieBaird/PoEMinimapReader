@@ -5,7 +5,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.charliebaird.Minimap.MinimapVisuals.*;
 

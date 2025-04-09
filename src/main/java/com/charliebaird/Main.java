@@ -1,6 +1,5 @@
 package com.charliebaird;
 
-import com.charliebaird.PoEBot.MapRunner;
 import com.charliebaird.PoEBot.MouseJiggler;
 import com.charliebaird.PoEBot.PoEBot;
 

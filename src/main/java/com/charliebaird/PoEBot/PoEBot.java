@@ -1,7 +1,5 @@
 package com.charliebaird.PoEBot;
 
-import com.charliebaird.Minimap.Legend;
-import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.teensybottinglib.TeensyBot;
 
 import java.awt.*;
