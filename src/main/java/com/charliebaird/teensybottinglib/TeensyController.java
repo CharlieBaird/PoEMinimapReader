@@ -70,6 +70,11 @@ public class TeensyController
         sendCommand("MOUSE MOVE " + x + " " + y);
     }
 
+    public void mouseMoveRelative(int x, int y)
+    {
+        sendCommand("MOUSE MOVEREL " + x + " " + y);
+    }
+
     public void mousePress(String button)
     {
         sendCommand("MOUSE PRESS " + button.toLowerCase());

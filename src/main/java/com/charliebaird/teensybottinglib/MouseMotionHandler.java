@@ -15,20 +15,21 @@ import com.sun.jna.platform.win32.WinDef;
 
 public class MouseMotionHandler
 {
-    private MouseMotionFactory generalLocationFactory;
-    private MouseMotionFactory exactLocationFactory;
+    private final MouseMotionFactory generalLocationFactory;
+    private final MouseMotionFactory exactLocationFactory;
+    private final MouseMotionFactory relativeLocationFactory;
 
-    private TeensyController teensyController;
+    private final TeensyController teensyController;
+
+    ArrayList<Flow> flows = new ArrayList<>(Arrays.asList(
+            new Flow(FlowTemplates.variatingFlow()),
+            new Flow(FlowTemplates.slowStartup2Flow()),
+            new Flow(FlowTemplates.adjustingFlow()),
+            new Flow(FlowTemplates.jaggedFlow())
+    ));
 
     private MouseMotionFactory getGeneralLocationFactory()
     {
-        ArrayList<Flow> flows = new ArrayList<>(Arrays.asList(
-                new Flow(FlowTemplates.variatingFlow()),
-                new Flow(FlowTemplates.slowStartup2Flow()),
-                new Flow(FlowTemplates.adjustingFlow()),
-                new Flow(FlowTemplates.jaggedFlow())
-        ));
-
         MouseMotionFactory factory = new MouseMotionFactory(new DefaultMouseMotionNature());
 
         factory.setDeviationProvider(new SinusoidalDeviationProvider(SinusoidalDeviationProvider.DEFAULT_SLOPE_DIVIDER));
@@ -38,8 +39,7 @@ public class MouseMotionHandler
         factory.getNature().setMouseInfo(new TeensyMouseAccessor());
 
         DefaultSpeedManager manager = new DefaultSpeedManager(flows);
-//        DefaultSpeedManager manager = new DefaultSpeedManager();
-        manager.setMouseMovementBaseTimeMs(250);
+        manager.setMouseMovementBaseTimeMs(500);
         factory.setSpeedManager(manager);
 
         DefaultOvershootManager overshootManager = (DefaultOvershootManager) factory.getOvershootManager();
@@ -58,12 +58,26 @@ public class MouseMotionHandler
         return factory;
     }
 
+    private MouseMotionFactory getRelativeLocationFactory()
+    {
+        MouseMotionFactory factory = getGeneralLocationFactory();
+        RelativeMouseAccessor accessor = new RelativeMouseAccessor();
+        factory.getNature().setSystemCalls(new RelativeSystemCalls(teensyController, accessor));
+        factory.getNature().setMouseInfo(accessor);
+        DefaultSpeedManager manager = new DefaultSpeedManager(flows);
+        manager.setMouseMovementBaseTimeMs(150);
+        factory.setSpeedManager(manager);
+
+        return factory;
+    }
+
     public MouseMotionHandler(TeensyController teensyController)
     {
         this.teensyController = teensyController;
 
         this.generalLocationFactory = getGeneralLocationFactory();
         this.exactLocationFactory = getExactLocationFactory();
+        this.relativeLocationFactory = getRelativeLocationFactory();
     }
 
     public void mouseMoveGeneralLocation(int x, int y)
@@ -82,6 +96,77 @@ public class MouseMotionHandler
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void mouseMoveRelative(int x, int y)
+    {
+        try {
+            relativeLocationFactory.move(x, y);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+class RelativeMouseAccessor implements MouseInfoAccessor
+{
+    Point loc;
+
+    public RelativeMouseAccessor()
+    {
+        loc = new Point(0, 0);
+    }
+
+    @Override
+    public Point getMousePosition()
+    {
+        return loc;
+    }
+
+    public void setLoc(Point loc)
+    {
+        this.loc = loc;
+    }
+}
+
+class RelativeSystemCalls implements SystemCalls
+{
+    private final TeensyController teensyController;
+    private final RelativeMouseAccessor relativeMouseAccessor;
+
+    public RelativeSystemCalls(TeensyController teensyController, RelativeMouseAccessor mouseAccessor)
+    {
+        super();
+        this.teensyController = teensyController;
+        this.relativeMouseAccessor = mouseAccessor;
+    }
+
+    @Override
+    public long currentTimeMillis()
+    {
+        return System.currentTimeMillis();
+    }
+
+    @Override
+    public void sleep(long l) throws InterruptedException
+    {
+        Thread.sleep(l);
+    }
+
+    @Override
+    public Dimension getScreenSize()
+    {
+        return Toolkit.getDefaultToolkit().getScreenSize();
+    }
+
+    @Override
+    public void setMousePosition(int x, int y)
+    {
+        int dx = relativeMouseAccessor.getMousePosition().x - x;
+        int dy = relativeMouseAccessor.getMousePosition().y - y;
+        relativeMouseAccessor.setLoc(new Point(x, y));
+        teensyController.mouseMoveRelative(dx, dy);
+        System.out.println("Setting position");
     }
 }
 

@@ -63,6 +63,11 @@ public class TeensyBot
         mouseMotionHandler.mouseMoveExactLocation(p.x, p.y);
     }
 
+    public void mouseMoveRelative(Point p)
+    {
+        mouseMotionHandler.mouseMoveRelative(p.x, p.y);
+    }
+
     private final Set<KeyCode> HeldKeys;
     private final Set<MouseCode> HeldMouseClicks;
 

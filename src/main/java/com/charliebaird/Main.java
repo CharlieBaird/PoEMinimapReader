@@ -1,15 +1,8 @@
 package com.charliebaird;
 
-import com.charliebaird.Minimap.Legend;
-import com.charliebaird.Minimap.MapRunner;
-import com.charliebaird.Minimap.MinimapExtractor;
+import com.charliebaird.PoEBot.MapRunner;
+import com.charliebaird.PoEBot.MouseJiggler;
 import com.charliebaird.PoEBot.PoEBot;
-import com.charliebaird.teensybottinglib.InputCodes.MouseCode;
-import com.charliebaird.utility.ScreenCapture;
-import com.charliebaird.utility.Timer;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.imgcodecs.Imgcodecs;
 
 public class Main
 {
@@ -56,13 +49,25 @@ public class Main
 
         else if (args[0].equals("-r"))
         {
-            MapRunner runner = new MapRunner();
-            for (int i=0; i<25; i++)
-            {
-                runner.runIteration();
-            }
+//            MapRunner runner = new MapRunner();
+//            for (int i=0; i<20; i++)
+//            {
+//                runner.runIteration();
+//            }
+//
+//            runner.exitMap();
 
-            runner.exitMap();
+            PoEBot bot = new PoEBot();
+            MouseJiggler jiggler = new MouseJiggler(bot);
+            Thread jiggleThread = new Thread(jiggler);
+            jiggleThread.start();
+            bot.delayMS(3000);
+            jiggler.stop();
+            try {
+                jiggleThread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
