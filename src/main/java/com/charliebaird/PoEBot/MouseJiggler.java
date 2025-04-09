@@ -1,5 +1,7 @@
 package com.charliebaird.PoEBot;
 
+import com.charliebaird.utility.SleepUtils;
+
 import java.awt.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -17,30 +19,25 @@ public class MouseJiggler implements Runnable
     public void run()
     {
         while (running) {
-            try {
-                int dx;
-                int dy;
+            int dx;
+            int dy;
 
-                int rand = ThreadLocalRandom.current().nextInt(0, 10);
-                if (rand >= 8)
-                {
-                    dx = ThreadLocalRandom.current().nextInt(-8, 9); // -1, 0, or 1
-                    dy = ThreadLocalRandom.current().nextInt(-8, 9);
-                }
-                else {
-                    dx = ThreadLocalRandom.current().nextInt(-1, 2); // -1, 0, or 1
-                    dy = ThreadLocalRandom.current().nextInt(-1, 2);
-                }
-
-                bot.mouseMoveRelative(new Point(dx, dy));
-
-                Thread.sleep(ThreadLocalRandom.current().nextInt(20, 1200));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+            int rand = ThreadLocalRandom.current().nextInt(0, 10);
+            if (rand >= 8) {
+                dx = ThreadLocalRandom.current().nextInt(-8, 9); // -1, 0, or 1
+                dy = ThreadLocalRandom.current().nextInt(-8, 9);
+            } else {
+                dx = ThreadLocalRandom.current().nextInt(-1, 2); // -1, 0, or 1
+                dy = ThreadLocalRandom.current().nextInt(-1, 2);
             }
+
+            bot.mouseMoveRelative(new Point(dx, dy));
+
+            // Right offset normal distribution
+            SleepUtils.sleep(20, 1200, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
         }
     }
+
 
     public void stop()
     {

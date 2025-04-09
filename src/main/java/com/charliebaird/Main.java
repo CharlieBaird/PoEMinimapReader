@@ -18,7 +18,7 @@ public class Main
 
     public static void main(String[] args)
     {
-        SleepUtils.testDistributions();
+//        SleepUtils.testDistributions();
 
         if (args.length != 1)
         {
@@ -62,7 +62,7 @@ public class Main
             {
                 runner.runIteration();
             }
- 
+
             runner.exitMap();
         }
     }

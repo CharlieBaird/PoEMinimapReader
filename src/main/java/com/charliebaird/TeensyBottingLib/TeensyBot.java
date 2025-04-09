@@ -70,7 +70,8 @@ public class TeensyBot
         if (!HeldMouseClicks.contains(mouseCode)) {
             HeldMouseClicks.add(mouseCode);
             teensy.mousePress(serial);
-            SleepUtils.delayAround(minDur, maxDur);
+            SleepUtils.sleep(minDur, maxDur, SleepUtils.BiasType.EXPONENTIAL, 3, 0, true);
+
             teensy.mouseRelease(serial);
             HeldMouseClicks.remove(mouseCode);
         }

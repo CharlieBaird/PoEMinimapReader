@@ -1,6 +1,7 @@
 package com.charliebaird.PoEBot;
 
 import com.charliebaird.TeensyBottingLib.InputCodes.MouseCode;
+import com.charliebaird.utility.SleepUtils;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -17,16 +18,13 @@ public class IntermittentAttacker implements Runnable
     @Override
     public void run()
     {
-        try {
-            Thread.sleep(ThreadLocalRandom.current().nextInt(2523, 4623));
-            while (running) {
-                System.out.println("Attacking");
-                bot.mouseClick(MouseCode.RIGHT);
-                Thread.sleep(ThreadLocalRandom.current().nextInt(1423, 2344));
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            running = false;
+        SleepUtils.sleep(800, 3500, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+        while (running) {
+            System.out.println("Attacking");
+
+            bot.mouseClickForDuration(MouseCode.RIGHT, 60, 500);
+
+            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
         }
     }
 

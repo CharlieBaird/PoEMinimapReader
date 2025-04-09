@@ -86,7 +86,8 @@ public class SleepUtils {
 
     public static void testDistributions()
     {
-//        printHistogram(SleepUtils.BiasType.EXPONENTIAL, 5.0, 0.0, false);
+//        printHistogram(SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+//        printHistogram(SleepUtils.BiasType.EXPONENTIAL, 3.0, 0.0, true);
 //        printHistogram(SleepUtils.BiasType.GAUSSIAN, 0.25, 0.7, false);
 //        printHistogram(BiasType.EXPONENTIAL, 4, 0, true);
     }
