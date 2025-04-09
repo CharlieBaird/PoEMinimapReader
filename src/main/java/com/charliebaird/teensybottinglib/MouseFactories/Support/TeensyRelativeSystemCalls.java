@@ -1,18 +1,18 @@
 package com.charliebaird.teensybottinglib.MouseFactories.Support;
 
-import com.charliebaird.teensybottinglib.TeensyController;
+import com.charliebaird.teensybottinglib.TeensyIO;
 
 import java.awt.*;
 
 public class TeensyRelativeSystemCalls extends SystemCallsParent
 {
-    private final TeensyController teensyController;
+    private final TeensyIO teensyIO;
     private final TeensyRelativeMouseAccessor relativeMouseAccessor;
 
-    public TeensyRelativeSystemCalls(TeensyController teensyController, TeensyRelativeMouseAccessor mouseAccessor)
+    public TeensyRelativeSystemCalls(TeensyIO teensyIO, TeensyRelativeMouseAccessor mouseAccessor)
     {
         super();
-        this.teensyController = teensyController;
+        this.teensyIO = teensyIO;
         this.relativeMouseAccessor = mouseAccessor;
     }
 
@@ -22,7 +22,7 @@ public class TeensyRelativeSystemCalls extends SystemCallsParent
         int dx = relativeMouseAccessor.getMousePosition().x - x;
         int dy = relativeMouseAccessor.getMousePosition().y - y;
         relativeMouseAccessor.setLoc(new Point(x, y));
-        teensyController.mouseMoveRelative(dx, dy);
+        teensyIO.mouseMoveRelative(dx, dy);
         System.out.println("Setting position");
     }
 }

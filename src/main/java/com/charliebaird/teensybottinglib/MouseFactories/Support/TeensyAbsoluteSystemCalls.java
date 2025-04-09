@@ -1,20 +1,20 @@
 package com.charliebaird.teensybottinglib.MouseFactories.Support;
 
-import com.charliebaird.teensybottinglib.TeensyController;
+import com.charliebaird.teensybottinglib.TeensyIO;
 
 public class TeensyAbsoluteSystemCalls extends SystemCallsParent
 {
-    private final TeensyController teensyController;
+    private final TeensyIO teensyIO;
 
-    public TeensyAbsoluteSystemCalls(TeensyController teensyController)
+    public TeensyAbsoluteSystemCalls(TeensyIO teensyIO)
     {
         super();
-        this.teensyController = teensyController;
+        this.teensyIO = teensyIO;
     }
 
     @Override
     public void setMousePosition(int x, int y)
     {
-        teensyController.mouseMove(x, y);
+        teensyIO.mouseMove(x, y);
     }
 }

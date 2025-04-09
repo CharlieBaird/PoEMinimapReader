@@ -10,11 +10,11 @@ import java.util.Set;
 public class TeensyBot
 {
     private final MouseMotionHandler mouseMotionHandler;
-    private final TeensyController teensy;
+    private final TeensyIO teensy;
 
     public TeensyBot()
     {
-        teensy = new TeensyController();
+        teensy = new TeensyIO();
         mouseMotionHandler = new MouseMotionHandler(teensy);
         HeldKeys = new HashSet<>();
         HeldMouseClicks = new HashSet<>();

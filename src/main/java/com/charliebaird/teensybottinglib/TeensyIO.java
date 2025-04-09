@@ -5,7 +5,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-public class TeensyController
+public class TeensyIO
 {
     private SerialPort port;
     private PrintWriter writer;
@@ -23,12 +23,12 @@ public class TeensyController
         return portsList;
     }
 
-    public TeensyController()
+    public TeensyIO()
     {
         this(getComForTeensy());
     }
 
-    public TeensyController(ArrayList<String> ports)
+    public TeensyIO(ArrayList<String> ports)
     {
         for (String portDescriptor : ports)
         {

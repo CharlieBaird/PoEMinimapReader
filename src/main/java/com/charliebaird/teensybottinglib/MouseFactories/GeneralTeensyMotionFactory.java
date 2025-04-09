@@ -1,14 +1,14 @@
 package com.charliebaird.teensybottinglib.MouseFactories;
 
-import com.charliebaird.teensybottinglib.TeensyController;
+import com.charliebaird.teensybottinglib.TeensyIO;
 
 public abstract class GeneralTeensyMotionFactory extends GeneralMotionFactory
 {
-    protected final TeensyController teensyController;
+    protected final TeensyIO teensyIO;
 
-    public GeneralTeensyMotionFactory(TeensyController teensyController)
+    public GeneralTeensyMotionFactory(TeensyIO teensyIO)
     {
         super();
-        this.teensyController = teensyController;
+        this.teensyIO = teensyIO;
     }
 }

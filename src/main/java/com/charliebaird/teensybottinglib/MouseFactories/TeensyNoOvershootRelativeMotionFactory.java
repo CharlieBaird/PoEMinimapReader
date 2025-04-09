@@ -2,18 +2,18 @@ package com.charliebaird.teensybottinglib.MouseFactories;
 
 import com.charliebaird.teensybottinglib.MouseFactories.Support.TeensyRelativeMouseAccessor;
 import com.charliebaird.teensybottinglib.MouseFactories.Support.TeensyRelativeSystemCalls;
-import com.charliebaird.teensybottinglib.TeensyController;
+import com.charliebaird.teensybottinglib.TeensyIO;
 import com.github.joonasvali.naturalmouse.support.DefaultOvershootManager;
 import com.github.joonasvali.naturalmouse.support.DefaultSpeedManager;
 
 public class TeensyNoOvershootRelativeMotionFactory extends GeneralTeensyMotionFactory
 {
-    public TeensyNoOvershootRelativeMotionFactory(TeensyController teensyController)
+    public TeensyNoOvershootRelativeMotionFactory(TeensyIO teensyIO)
     {
-        super(teensyController);
+        super(teensyIO);
 
         TeensyRelativeMouseAccessor teensyRelativeMouseAccessor = new TeensyRelativeMouseAccessor();
-        getNature().setSystemCalls(new TeensyRelativeSystemCalls(teensyController, teensyRelativeMouseAccessor));
+        getNature().setSystemCalls(new TeensyRelativeSystemCalls(teensyIO, teensyRelativeMouseAccessor));
         getNature().setMouseInfo(teensyRelativeMouseAccessor);
 
         getNature().setReactionTimeVariationMs(0);

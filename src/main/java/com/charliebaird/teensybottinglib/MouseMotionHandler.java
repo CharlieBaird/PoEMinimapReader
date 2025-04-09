@@ -11,11 +11,11 @@ public class MouseMotionHandler
     private final MouseMotionFactory exactLocationFactory;
     private final MouseMotionFactory relativeLocationFactory;
 
-    public MouseMotionHandler(TeensyController teensyController)
+    public MouseMotionHandler(TeensyIO teensyIO)
     {
-        this.generalLocationFactory = new TeensyNoOvershootAbsoluteMotionFactory(teensyController);
-        this.exactLocationFactory = new TeensyOvershootAbsoluteMotionFactory(teensyController);
-        this.relativeLocationFactory = new TeensyNoOvershootRelativeMotionFactory(teensyController);
+        this.generalLocationFactory = new TeensyNoOvershootAbsoluteMotionFactory(teensyIO);
+        this.exactLocationFactory = new TeensyOvershootAbsoluteMotionFactory(teensyIO);
+        this.relativeLocationFactory = new TeensyNoOvershootRelativeMotionFactory(teensyIO);
     }
 
     public void mouseMoveGeneralLocation(int x, int y)
