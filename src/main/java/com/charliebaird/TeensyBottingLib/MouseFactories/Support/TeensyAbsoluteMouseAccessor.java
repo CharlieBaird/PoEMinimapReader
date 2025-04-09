@@ -1,4 +1,4 @@
-package com.charliebaird.teensybottinglib.MouseFactories.Support;
+package com.charliebaird.TeensyBottingLib.MouseFactories.Support;
 
 import com.github.joonasvali.naturalmouse.api.MouseInfoAccessor;
 import com.sun.jna.platform.win32.User32;

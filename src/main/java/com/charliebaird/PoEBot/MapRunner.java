@@ -2,7 +2,7 @@ package com.charliebaird.PoEBot;
 
 import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
-import com.charliebaird.teensybottinglib.InputCodes.MouseCode;
+import com.charliebaird.TeensyBottingLib.InputCodes.MouseCode;
 import com.charliebaird.utility.ScreenCapture;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;

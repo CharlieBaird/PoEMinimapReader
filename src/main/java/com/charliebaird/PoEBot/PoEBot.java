@@ -1,6 +1,6 @@
 package com.charliebaird.PoEBot;
 
-import com.charliebaird.teensybottinglib.TeensyBot;
+import com.charliebaird.TeensyBottingLib.TeensyBot;
 
 import java.awt.*;
 

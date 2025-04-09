@@ -1,4 +1,4 @@
-package com.charliebaird.teensybottinglib.InputCodes;
+package com.charliebaird.TeensyBottingLib.InputCodes;
 
 public enum KeyCode {
     // Letters A-Z

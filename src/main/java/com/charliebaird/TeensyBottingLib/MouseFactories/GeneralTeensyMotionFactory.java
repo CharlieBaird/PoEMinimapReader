@@ -1,6 +1,6 @@
-package com.charliebaird.teensybottinglib.MouseFactories;
+package com.charliebaird.TeensyBottingLib.MouseFactories;
 
-import com.charliebaird.teensybottinglib.TeensyIO;
+import com.charliebaird.TeensyBottingLib.TeensyIO;
 
 public abstract class GeneralTeensyMotionFactory extends GeneralMotionFactory
 {

@@ -1,6 +1,6 @@
-package com.charliebaird.teensybottinglib.MouseFactories.Support;
+package com.charliebaird.TeensyBottingLib.MouseFactories.Support;
 
-import com.charliebaird.teensybottinglib.TeensyIO;
+import com.charliebaird.TeensyBottingLib.TeensyIO;
 
 public class TeensyAbsoluteSystemCalls extends SystemCallsParent
 {

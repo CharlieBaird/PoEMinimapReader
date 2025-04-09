@@ -1,4 +1,4 @@
-package com.charliebaird.teensybottinglib.MouseFactories.Support;
+package com.charliebaird.TeensyBottingLib.MouseFactories.Support;
 
 import com.github.joonasvali.naturalmouse.api.SystemCalls;
 
