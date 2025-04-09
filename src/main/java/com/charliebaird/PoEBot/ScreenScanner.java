@@ -1,8 +1,5 @@
 package com.charliebaird.PoEBot;
 
-import com.TeensyBottingLib.InputCodes.MouseCode;
-import com.TeensyBottingLib.Utility.SleepUtils;
-import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.Core;
@@ -32,11 +29,14 @@ public class ScreenScanner implements Runnable
 
             Mat mat = ScreenCapture.captureScreenMat();
 
-            boolean eaterInfluenceProcced = scanForEaterInfluence(mat);
+            Timer.start();
+            System.out.println(iteration);
+            boolean influenceProc = scanForInfluenceProc(mat);
+            Timer.stop();
 
-            if (eaterInfluenceProcced)
+            if (influenceProc)
             {
-                System.out.println("Eater influence in iteration " + iteration);
+                System.out.println("\tInfluence procced in iteration " + iteration);
             }
 
             writeMatToDisk("scanner" + iteration + ".png", mat, true);
@@ -48,29 +48,40 @@ public class ScreenScanner implements Runnable
         running = false;
     }
 
-    public boolean scanForEaterInfluence(Mat original)
+    public boolean scanForInfluenceProc(Mat original)
     {
         Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
 
-        Timer.start();
+        Mat eaterInfluenceFilter = applyHSVFilter(original, 90, 111, 159, 97, 231, 255);
+        double eaterPercent = getNonZeroPercent(eaterInfluenceFilter);
+        System.out.println("\tEater percent: " + eaterPercent);
+        if (eaterPercent > 7) return true;
 
-        // Convert color encoding to HSV
+        Mat exarchInfluenceFilter = applyHSVFilter(original, 0, 64, 85, 11, 165, 255);
+        double exarchPercent = getNonZeroPercent(exarchInfluenceFilter);
+        System.out.println("\tExarch percent: " + exarchPercent);
+        return exarchPercent > 7;
+    }
+
+    public static Mat applyHSVFilter(Mat original, int hMin, int sMin, int vMin, int hMax, int sMax, int vMax)
+    {
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
 
-        // Use HSV in range openCV method to filter the majority of mat
-        Scalar lowerBound = new Scalar(90, 111, 159);
-        Scalar upperBound = new Scalar(97, 231, 255);
+        Scalar lowerBound = new Scalar(hMin, sMin, vMin);
+        Scalar upperBound = new Scalar(hMax, sMax, vMax);
         Mat mask = new Mat();
         Core.inRange(hsv, lowerBound, upperBound, mask);
 
-        MinimapVisuals.writeMatToDisk("scanner84mask.png", mask);
+        return mask;
+    }
 
-        int nonZero = Core.countNonZero(mask);
-        int totalPixels = mask.rows() * mask.cols();
+    private double getNonZeroPercent(Mat mat)
+    {
+        int nonZero = Core.countNonZero(mat);
+        int totalPixels = mat.rows() * mat.cols();
         double percent = (nonZero / (double) totalPixels) * 100.0;
-        Timer.stop();
 
-        return percent > 10;
+        return percent;
     }
 }

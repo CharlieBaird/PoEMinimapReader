@@ -3,6 +3,7 @@ package com.charliebaird;
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.PoEBot.MapRunner;
+import com.charliebaird.PoEBot.ScreenScanner;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.*;
@@ -50,11 +51,11 @@ public class Main
 
         else if (args[0].equals("-l"))
         {
-            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/output/scanner84.png";
+            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/output/scanner523.png";
             Mat original = Imgcodecs.imread(imagePath);
 
-            Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
- 
+//            Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
+
             Timer.start();
 
             // Convert color encoding to HSV
@@ -62,10 +63,12 @@ public class Main
             Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
 
             // Use HSV in range openCV method to filter the majority of mat
-            Scalar lowerBound = new Scalar(90, 111, 159);
-            Scalar upperBound = new Scalar(97, 231, 255);
-            Mat mask = new Mat();
-            Core.inRange(hsv, lowerBound, upperBound, mask);
+//            Scalar lowerBound = new Scalar(0, 64, 85);
+//            Scalar upperBound = new Scalar(11, 165, 255);
+//            Mat mask = new Mat();
+//            Core.inRange(hsv, lowerBound, upperBound, mask);
+
+            Mat mask = ScreenScanner.applyHSVFilter(original, 0, 64, 85, 11, 165, 255);
 
             MinimapVisuals.writeMatToDisk("scanner84mask.png", mask);
 
