@@ -1,11 +1,16 @@
 package com.charliebaird;
 
 import com.charliebaird.Minimap.MinimapExtractor;
+import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.PoEBot.MapRunner;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
-import org.opencv.core.Mat;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main
 {
@@ -29,27 +34,47 @@ public class Main
             minimap.saveFinalMinimap("final.png");
         }
 
+//        else if (args[0].equals("-l"))
+//        {
+////            Timer.start();
+//            Mat original = ScreenCapture.captureScreenMat();
+////            Timer.stop();
+////
+////            Timer.start();
+//            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+//            minimap.resolve(original);
+////            Timer.stop();
+//            minimap.saveFinalMinimap("final.png");
+////
+//        }
+
         else if (args[0].equals("-l"))
         {
-//            Timer.start();
-            Mat original = ScreenCapture.captureScreenMat();
-//            Timer.stop();
-//
-//            Timer.start();
-            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-            minimap.resolve(original);
-//            Timer.stop();
-            minimap.saveFinalMinimap("final.png");
-//
-//            Point p = minimap.findOptimalRevealAngle(0);
-//            if (p != null)
-//            {
-//                Point screenPoint = Legend.convertMinimapPointToScreen(p);
-//
-//                bot.mouseMoveGeneralLocation(screenPoint);
-//            }
-//
-//            minimap.saveFinalMinimap("final.png");
+            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/output/scanner84.png";
+            Mat original = Imgcodecs.imread(imagePath);
+
+            Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
+ 
+            Timer.start();
+
+            // Convert color encoding to HSV
+            Mat hsv = new Mat();
+            Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
+
+            // Use HSV in range openCV method to filter the majority of mat
+            Scalar lowerBound = new Scalar(90, 111, 159);
+            Scalar upperBound = new Scalar(97, 231, 255);
+            Mat mask = new Mat();
+            Core.inRange(hsv, lowerBound, upperBound, mask);
+
+            MinimapVisuals.writeMatToDisk("scanner84mask.png", mask);
+
+            int nonZero = Core.countNonZero(mask);
+            int totalPixels = mask.rows() * mask.cols();
+            double percent = (nonZero / (double) totalPixels) * 100.0;
+            Timer.stop();
+
+            System.out.printf("Non-zero pixels: %d / %d (%.2f%%)%n", nonZero, totalPixels, percent);
         }
 
         else if (args[0].equals("-r"))
