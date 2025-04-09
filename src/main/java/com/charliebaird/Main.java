@@ -5,6 +5,7 @@ import com.charliebaird.PoEBot.MapRunner;
 import com.charliebaird.PoEBot.MouseJiggler;
 import com.charliebaird.PoEBot.PoEBot;
 import com.charliebaird.utility.ScreenCapture;
+import com.charliebaird.utility.SleepUtils;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -17,6 +18,8 @@ public class Main
 
     public static void main(String[] args)
     {
+        SleepUtils.testDistributions();
+
         if (args.length != 1)
         {
             String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
@@ -55,11 +58,11 @@ public class Main
         else if (args[0].equals("-r"))
         {
             MapRunner runner = new MapRunner();
-            for (int i=0; i<40; i++)
+            for (int i=0; i<20; i++)
             {
                 runner.runIteration();
             }
-
+ 
             runner.exitMap();
         }
     }
