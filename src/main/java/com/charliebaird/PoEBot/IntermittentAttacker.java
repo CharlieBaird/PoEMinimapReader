@@ -1,7 +1,7 @@
 package com.charliebaird.PoEBot;
 
-import com.charliebaird.TeensyBottingLib.InputCodes.MouseCode;
-import com.charliebaird.utility.SleepUtils;
+import com.TeensyBottingLib.InputCodes.MouseCode;
+import com.TeensyBottingLib.Utility.SleepUtils;
 
 import java.util.concurrent.ThreadLocalRandom;
 

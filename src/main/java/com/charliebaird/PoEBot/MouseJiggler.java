@@ -1,6 +1,6 @@
 package com.charliebaird.PoEBot;
 
-import com.charliebaird.utility.SleepUtils;
+import com.TeensyBottingLib.Utility.SleepUtils;
 
 import java.awt.*;
 import java.util.concurrent.ThreadLocalRandom;

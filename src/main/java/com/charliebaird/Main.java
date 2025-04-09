@@ -2,10 +2,7 @@ package com.charliebaird;
 
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.PoEBot.MapRunner;
-import com.charliebaird.PoEBot.MouseJiggler;
-import com.charliebaird.PoEBot.PoEBot;
 import com.charliebaird.utility.ScreenCapture;
-import com.charliebaird.utility.SleepUtils;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
