@@ -99,9 +99,11 @@ public class MapRunner
     {
         SleepUtils.delayAround(200);
 
+        bot.mouseMoveGeneralLocation(new Point(1920/2, 360), 40);
+
         bot.keyClick(KeyCode.N);
 
-        SleepUtils.delayAround(400);
+        SleepUtils.delayAround(150);
 
         // Scan screen for red portal
         Point portalPoint = findPortal();
@@ -131,7 +133,7 @@ public class MapRunner
 
         System.out.println("Portal found at " + portalPoint.x + ", " + portalPoint.y);
 
-        bot.mouseMoveGeneralLocation(portalPoint, 40);
+        bot.mouseMoveGeneralLocation(portalPoint);
 
         SleepUtils.delayAround(80);
 
