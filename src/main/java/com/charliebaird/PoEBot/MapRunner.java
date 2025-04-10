@@ -101,28 +101,26 @@ public class MapRunner
 
         SleepUtils.delayAround(200);
 
-        bot.keyClick(KeyCode.R);
+        bot.keyClick(KeyCode.N);
 
         SleepUtils.delayAround(400);
 
-        // Scan screen for green portal
+        // Scan screen for red portal
         Point portalPoint = findPortal();
 
-        // If not found, hold right click again and cast portal again
         if (portalPoint == null)
         {
-            for (int i=0; i<5; i++)
+            for (int i = 0; i < 5; i++)
             {
-                System.out.println("In for loop");
-                bot.mouseClickForDuration(MouseCode.RIGHT, 800, 1800);
+                bot.mouseClickForDuration(MouseCode.RIGHT, 700 + 300 * i, 2000 + 300 * i);
+
                 SleepUtils.delayAround(200);
-                bot.keyClick(KeyCode.R);
-                SleepUtils.delayAround(400);
+
+                bot.keyClick(KeyCode.N);
+
                 portalPoint = findPortal();
-                if (portalPoint != null)
-                {
-                    break;
-                }
+
+                if (portalPoint != null) break;
             }
 
             if (portalPoint == null)
@@ -151,12 +149,7 @@ public class MapRunner
 
     public static Point findPortal(Mat mat)
     {
-        // Crop the life circle out
-        int cropHeight = 200;
-        int newHeight = mat.rows() - cropHeight;
-
-        // Crop the top part (excluding the bottom 200 pixels)
-        mat = new Mat(mat, new Rect(0, 0, mat.cols(), newHeight));
+        mat = new Mat(mat, new Rect(160, 160, mat.cols() - 160, mat.rows() - 160 - 200));
 
         Mat mask1 = ScreenScanner.applyHSVFilter(mat, 0, 160, 75, 1, 255, 255);
         Mat mask2 = ScreenScanner.applyHSVFilter(mat, 178, 150, 84, 179, 211, 255);
@@ -189,7 +182,11 @@ public class MapRunner
             }
         }
 
-        return centerPoint;
+        if (centerPoint != null) {
+            return new Point(centerPoint.x + 160, centerPoint.y + 160);
+        }
+
+        return null;
     }
 
     public void runMapLoop()
