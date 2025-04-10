@@ -24,7 +24,8 @@ public class IntermittentAttacker implements Runnable
 
             bot.mouseClickForDuration(MouseCode.RIGHT, 60, 500);
 
-            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+//            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.EXPONENTIAL, 4, 0, true);
         }
     }
 

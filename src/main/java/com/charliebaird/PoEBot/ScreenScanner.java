@@ -30,9 +30,7 @@ public class ScreenScanner implements Runnable
 
             Mat mat = ScreenCapture.captureScreenMat();
 
-            Timer.start();
             boolean influenceProc = scanForInfluenceProc(mat);
-            Timer.stop();
 
             if (influenceProc)
             {

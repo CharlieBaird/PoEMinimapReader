@@ -54,8 +54,11 @@ public class Main
 
         else if (args[0].equals("-l"))
         {
-            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/portalsample2.png";
-            Mat original = Imgcodecs.imread(imagePath);
+//            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/portalsample2.png";
+//            Mat original = Imgcodecs.imread(imagePath);
+
+            Mat original = ScreenCapture.captureFullscreenMat();
+            MinimapVisuals.writeMatToDisk("_test2.png", original);
 
 //            Timer.start();
 //            boolean influenceProc = ScreenScanner.scanForInfluenceProc(original);
@@ -67,9 +70,13 @@ public class Main
 
         else if (args[0].equals("-r"))
         {
+            Timer.start();
             MapRunner runner = new MapRunner();
+            Timer.stop();
 
+            Timer.start();
             runner.openMap();
+            Timer.stop();
 
             runner.executiveLoop(20);
 

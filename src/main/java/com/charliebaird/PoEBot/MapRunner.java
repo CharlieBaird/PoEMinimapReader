@@ -5,10 +5,9 @@ import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.TeensyBottingLib.InputCodes.KeyCode;
 import com.TeensyBottingLib.InputCodes.MouseCode;
+import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
@@ -53,13 +52,9 @@ public class MapRunner
     public void exitMap()
     {
         mouseJiggler.stop();
-        intermittentAttacker.stop();
-        screenScanner.stop();
 
         try {
             mouseJigglerThread.join();
-            intermittentAttackerThread.join();
-            screenScannerThread.join();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -78,19 +73,31 @@ public class MapRunner
             runMapLoop();
 
             if (influenceDetected)
+            {
                 break;
+            }
         }
 
         bot.mouseRelease(MouseCode.LEFT);
+        intermittentAttacker.stop();
+        screenScanner.stop();
+        try {
+            intermittentAttackerThread.join();
+            screenScannerThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        SleepUtils.delayAround(500);
 
         portalOut();
     }
 
-    public void portalOut()
+    public boolean portalOut()
     {
         SleepUtils.delayAround(200);
 
-        bot.mouseClickForDuration(MouseCode.LEFT, 150, 500);
+        bot.mouseClickForDuration(MouseCode.RIGHT, 700, 2000);
 
         SleepUtils.delayAround(200);
 
@@ -106,33 +113,62 @@ public class MapRunner
         {
             for (int i=0; i<5; i++)
             {
-                bot.mouseClickForDuration(MouseCode.LEFT, 800, 1800);
+                System.out.println("In for loop");
+                bot.mouseClickForDuration(MouseCode.RIGHT, 800, 1800);
                 SleepUtils.delayAround(200);
                 bot.keyClick(KeyCode.R);
                 SleepUtils.delayAround(400);
                 portalPoint = findPortal();
-                if (portalPoint != null) break;
+                if (portalPoint != null)
+                {
+                    break;
+                }
             }
 
-
+            if (portalPoint == null)
+            {
+                System.out.println("Couldn't open a portal. Breaking");
+                return false;
+            }
         }
+
+        System.out.println("Portal found at " + portalPoint.x + ", " + portalPoint.y);
 
         bot.mouseMoveGeneralLocation(portalPoint);
 
         SleepUtils.delayAround(80);
 
         bot.mouseClickOnceOrTwice(MouseCode.LEFT);
+
+        return true;
     }
 
     public static Point findPortal()
     {
-        Mat screen = ScreenCapture.captureScreenMat();
+        Mat screen = ScreenCapture.captureFullscreenMat();
         return findPortal(screen);
     }
 
     public static Point findPortal(Mat mat)
     {
-        Mat mask = ScreenScanner.applyHSVFilter(mat, 0, 220, 75, 1, 255, 240);
+        // Crop the life circle out
+        int cropHeight = 200;
+        int newHeight = mat.rows() - cropHeight;
+
+        // Crop the top part (excluding the bottom 200 pixels)
+        mat = new Mat(mat, new Rect(0, 0, mat.cols(), newHeight));
+
+        Mat mask1 = ScreenScanner.applyHSVFilter(mat, 0, 160, 75, 1, 255, 255);
+        Mat mask2 = ScreenScanner.applyHSVFilter(mat, 178, 150, 84, 179, 211, 255);
+        Mat mask = new Mat();
+        Core.bitwise_or(mask1, mask2, mask);
+
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15, 15));
+
+        // Perform morphological closing (dilate, then erode)
+        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_CLOSE, kernel, new Point(-1, -1), 1);
+
+        MinimapVisuals.writeMatToDisk("_test.png", mask);
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();

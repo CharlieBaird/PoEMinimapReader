@@ -42,10 +42,20 @@ public class ScreenCapture {
 //    }
 
 
-    private final static Rectangle captureRect = new Rectangle(259, 125, 1920 - 259 - 259, 1080 - 145 - 145);
+    private final static Rectangle centerRect = new Rectangle(259, 125, 1920 - 259 - 259, 1080 - 145 - 145);
+    private final static Rectangle fullscreenRect = new Rectangle(0, 0, 1920, 1080);
+
+    public static Mat captureFullscreenMat()
+    {
+        return captureMat(fullscreenRect);
+    }
 
     public static Mat captureScreenMat() {
-        BufferedImage image = robot.createScreenCapture(captureRect);
+        return captureMat(centerRect);
+    }
+
+    private static Mat captureMat(Rectangle rect) {
+        BufferedImage image = robot.createScreenCapture(rect);
 
         // Fastest path: TYPE_3BYTE_BGR is most compatible with OpenCV
         if (image.getType() != BufferedImage.TYPE_3BYTE_BGR) {
