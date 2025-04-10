@@ -5,7 +5,7 @@ def nothing(x):
     pass
 
 # Load image
-image = cv2.imread('../../samples/portalsample.png')
+image = cv2.imread('../../samples/portalsample2.png')
 
 if image is None:
     raise ValueError("Image failed to load. Check the file path.")

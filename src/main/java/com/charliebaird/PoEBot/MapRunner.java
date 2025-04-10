@@ -132,7 +132,7 @@ public class MapRunner
 
     public static Point findPortal(Mat mat)
     {
-        Mat mask = ScreenScanner.applyHSVFilter(mat, 89, 174, 60, 113, 252, 255);
+        Mat mask = ScreenScanner.applyHSVFilter(mat, 0, 220, 75, 1, 255, 240);
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();

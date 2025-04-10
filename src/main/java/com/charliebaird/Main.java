@@ -14,6 +14,8 @@ import org.opencv.imgproc.Moments;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.charliebaird.PoEBot.MapRunner.findPortal;
+
 public class Main
 {
     static { nu.pattern.OpenCV.loadLocally(); }
@@ -52,15 +54,15 @@ public class Main
 
         else if (args[0].equals("-l"))
         {
-            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/output/scanner718.png";
+            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/portalsample2.png";
             Mat original = Imgcodecs.imread(imagePath);
 
-            Timer.start();
-            boolean influenceProc = ScreenScanner.scanForInfluenceProc(original);
-            Timer.stop();
+//            Timer.start();
+//            boolean influenceProc = ScreenScanner.scanForInfluenceProc(original);
+//            Timer.stop();
 
-//            Point portal = findPortal(original);
-//            System.out.println(portal.x + " " + portal.y);
+            Point portal = findPortal(original);
+            System.out.println(portal.x + " " + portal.y);
         }
 
         else if (args[0].equals("-r"))

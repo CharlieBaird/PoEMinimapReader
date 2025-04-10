@@ -97,8 +97,6 @@ public class ScreenScanner implements Runnable
         Mat nonBlackMask = new Mat();
         Core.inRange(original, new Scalar(20, 20, 20), new Scalar(255, 255, 255), nonBlackMask);
 
-        MinimapVisuals.writeMatToDisk("scanner718nonblack.png", nonBlackMask);
-
         // Apply that non-black mask to the HSV mask (bitwise AND)
         Mat validRegionMask = new Mat();
         Core.bitwise_and(hsvMask, nonBlackMask, validRegionMask);
