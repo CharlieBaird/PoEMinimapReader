@@ -17,6 +17,11 @@ public class PoEBot extends TeensyBot
         super.mouseMoveGeneralLocation(new Point((int) Math.round(p.x), (int) Math.round(p.y)));
     }
 
+    public void mouseMoveGeneralLocation(org.opencv.core.Point p, int proximity)
+    {
+        super.mouseMoveGeneralLocation(new Point((int) Math.round(p.x), (int) Math.round(p.y)), proximity);
+    }
+
     public void mouseMoveExactLocation(org.opencv.core.Point p)
     {
         super.mouseMoveExactLocation(new Point((int) Math.round(p.x), (int) Math.round(p.y)));

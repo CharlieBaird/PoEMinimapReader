@@ -20,12 +20,12 @@ public class IntermittentAttacker implements Runnable
     {
         SleepUtils.sleep(800, 3500, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
         while (running) {
-            System.out.println("Attacking");
+//            System.out.println("Attacking");
 
             bot.mouseClickForDuration(MouseCode.RIGHT, 60, 500);
 
 //            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
-            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.EXPONENTIAL, 4, 0, true);
+            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.EXPONENTIAL, 6, 0, true);
         }
     }
 

@@ -15,6 +15,7 @@ public class ScreenScanner implements Runnable
 {
     private volatile boolean running = true;
     private final MapRunner mapRunner;
+    private boolean scanningForInfluence = true;
 
     public ScreenScanner(MapRunner mapRunner)
     {
@@ -30,16 +31,18 @@ public class ScreenScanner implements Runnable
 
             Mat mat = ScreenCapture.captureScreenMat();
 
-            boolean influenceProc = scanForInfluenceProc(mat);
-
-            if (influenceProc)
+            if (scanningForInfluence)
             {
-                System.out.println("\tInfluence procced in iteration " + iteration);
-                mapRunner.influenceDetected();
+                boolean influenceProc = scanForInfluenceProc(mat);
+                if (influenceProc)
+                {
+                    System.out.println("\tInfluence procced in iteration " + iteration);
+                    scanningForInfluence = false;
+                    mapRunner.influenceDetected();
+                }
 
+//                writeMatToDisk("scanner" + iteration + ".png", mat, true);
             }
-
-            writeMatToDisk("scanner" + iteration + ".png", mat, true);
         }
     }
 

@@ -7,6 +7,7 @@ import com.TeensyBottingLib.InputCodes.KeyCode;
 import com.TeensyBottingLib.InputCodes.MouseCode;
 import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
+import com.charliebaird.utility.Timer;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
@@ -34,6 +35,7 @@ public class MapRunner
         bot = new PoEBot();
 
         // Init mouse jiggler background thread, mimics human-like constant mouse jiggle
+
         mouseJiggler = new MouseJiggler(bot);
         mouseJigglerThread = new Thread(mouseJiggler);
         mouseJigglerThread.start();
@@ -88,17 +90,13 @@ public class MapRunner
             throw new RuntimeException(e);
         }
 
-        SleepUtils.delayAround(500);
+        SleepUtils.delayAround(250);
 
         portalOut();
     }
 
     public boolean portalOut()
     {
-        SleepUtils.delayAround(200);
-
-        bot.mouseClickForDuration(MouseCode.RIGHT, 700, 2000);
-
         SleepUtils.delayAround(200);
 
         bot.keyClick(KeyCode.N);
@@ -112,6 +110,7 @@ public class MapRunner
         {
             for (int i = 0; i < 5; i++)
             {
+                System.out.println("Couldn't find portal. " + i + "-th iteration");
                 bot.mouseClickForDuration(MouseCode.RIGHT, 700 + 300 * i, 2000 + 300 * i);
 
                 SleepUtils.delayAround(200);
@@ -132,7 +131,7 @@ public class MapRunner
 
         System.out.println("Portal found at " + portalPoint.x + ", " + portalPoint.y);
 
-        bot.mouseMoveGeneralLocation(portalPoint);
+        bot.mouseMoveGeneralLocation(portalPoint, 40);
 
         SleepUtils.delayAround(80);
 
