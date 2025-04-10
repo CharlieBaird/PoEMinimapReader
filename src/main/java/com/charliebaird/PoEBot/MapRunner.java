@@ -1,12 +1,16 @@
 package com.charliebaird.PoEBot;
 
+import com.TeensyBottingLib.Utility.SleepUtils;
 import com.charliebaird.Minimap.Legend;
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.TeensyBottingLib.InputCodes.KeyCode;
 import com.TeensyBottingLib.InputCodes.MouseCode;
 import com.charliebaird.utility.ScreenCapture;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +34,7 @@ public class MapRunner
     {
         bot = new PoEBot();
 
+        // Init mouse jiggler background thread, mimics human-like constant mouse jiggle
         mouseJiggler = new MouseJiggler(bot);
         mouseJigglerThread = new Thread(mouseJiggler);
         mouseJigglerThread.start();
@@ -38,7 +43,7 @@ public class MapRunner
         intermittentAttackerThread = new Thread(intermittentAttacker);
         intermittentAttackerThread.start();
 
-        screenScanner = new ScreenScanner(bot);
+        screenScanner = new ScreenScanner(this);
         screenScannerThread = new Thread(screenScanner);
         screenScannerThread.start();
     }
@@ -47,8 +52,6 @@ public class MapRunner
 
     public void exitMap()
     {
-        bot.mouseRelease(MouseCode.LEFT);
-
         mouseJiggler.stop();
         intermittentAttacker.stop();
         screenScanner.stop();
@@ -56,13 +59,104 @@ public class MapRunner
         try {
             mouseJigglerThread.join();
             intermittentAttackerThread.join();
+            screenScannerThread.join();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private final List<Point> recentSelections = new ArrayList<Point>();
-    public void runIteration()
+    boolean influenceDetected = false;
+    public void influenceDetected()
+    {
+        influenceDetected = true;
+    }
+
+    public void executiveLoop(int iterations)
+    {
+        for (int i = 0; i < iterations; i++)
+        {
+            runMapLoop();
+
+            if (influenceDetected)
+                break;
+        }
+
+        bot.mouseRelease(MouseCode.LEFT);
+
+        portalOut();
+    }
+
+    public void portalOut()
+    {
+        SleepUtils.delayAround(200);
+
+        bot.mouseClickForDuration(MouseCode.LEFT, 150, 500);
+
+        SleepUtils.delayAround(200);
+
+        bot.keyClick(KeyCode.R);
+
+        SleepUtils.delayAround(400);
+
+        // Scan screen for green portal
+        Point portalPoint = findPortal();
+
+        // If not found, hold right click again and cast portal again
+        if (portalPoint == null)
+        {
+            for (int i=0; i<5; i++)
+            {
+                bot.mouseClickForDuration(MouseCode.LEFT, 800, 1800);
+                SleepUtils.delayAround(200);
+                bot.keyClick(KeyCode.R);
+                SleepUtils.delayAround(400);
+                portalPoint = findPortal();
+                if (portalPoint != null) break;
+            }
+
+
+        }
+
+        bot.mouseMoveGeneralLocation(portalPoint);
+
+        SleepUtils.delayAround(80);
+
+        bot.mouseClickOnceOrTwice(MouseCode.LEFT);
+    }
+
+    public static Point findPortal()
+    {
+        Mat screen = ScreenCapture.captureScreenMat();
+        return findPortal(screen);
+    }
+
+    public static Point findPortal(Mat mat)
+    {
+        Mat mask = ScreenScanner.applyHSVFilter(mat, 89, 174, 60, 113, 252, 255);
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(mask.clone(), contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        Point centerPoint = null;
+        double maxArea = 0;
+        double minAreaThreshold = 3000; // arbitrary minimum size
+
+        for (MatOfPoint contour : contours) {
+            double area = Imgproc.contourArea(contour);
+            if (area > minAreaThreshold && area > maxArea) {
+                Moments moments = Imgproc.moments(contour);
+                if (moments.m00 != 0) {
+                    centerPoint = new Point(moments.m10 / moments.m00, moments.m01 / moments.m00);
+                    maxArea = area;
+                }
+            }
+        }
+
+        return centerPoint;
+    }
+
+    public void runMapLoop()
     {
         Mat original = ScreenCapture.captureScreenMat();
         MinimapExtractor minimap = new MinimapExtractor(true);
@@ -96,6 +190,7 @@ public class MapRunner
         bot.mousePress(MouseCode.LEFT);
     }
 
+    private final List<Point> recentSelections = new ArrayList<Point>();
     private static final double LIST_POSITION_WEIGHT = 1.0;
     private static final double DISTANCE_WEIGHT = 100.0;
     public static Point findBestRevealPoint(List<Point> revealPoints, List<Point> recentSelections) {

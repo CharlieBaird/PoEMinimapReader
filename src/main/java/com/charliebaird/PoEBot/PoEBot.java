@@ -1,5 +1,6 @@
 package com.charliebaird.PoEBot;
 
+import com.TeensyBottingLib.InputCodes.MouseCode;
 import com.TeensyBottingLib.TeensyBot;
 
 import java.awt.*;

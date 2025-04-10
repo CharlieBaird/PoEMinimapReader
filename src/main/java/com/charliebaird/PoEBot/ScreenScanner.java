@@ -1,5 +1,6 @@
 package com.charliebaird.PoEBot;
 
+import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.Core;
@@ -13,11 +14,11 @@ import static com.charliebaird.Minimap.MinimapVisuals.writeMatToDisk;
 public class ScreenScanner implements Runnable
 {
     private volatile boolean running = true;
-    private final PoEBot bot;
+    private final MapRunner mapRunner;
 
-    public ScreenScanner(PoEBot bot)
+    public ScreenScanner(MapRunner mapRunner)
     {
-        this.bot = bot;
+        this.mapRunner = mapRunner;
     }
 
     @Override
@@ -30,13 +31,14 @@ public class ScreenScanner implements Runnable
             Mat mat = ScreenCapture.captureScreenMat();
 
             Timer.start();
-            System.out.println(iteration);
             boolean influenceProc = scanForInfluenceProc(mat);
             Timer.stop();
 
             if (influenceProc)
             {
                 System.out.println("\tInfluence procced in iteration " + iteration);
+                mapRunner.influenceDetected();
+
             }
 
             writeMatToDisk("scanner" + iteration + ".png", mat, true);
@@ -48,18 +50,18 @@ public class ScreenScanner implements Runnable
         running = false;
     }
 
-    public boolean scanForInfluenceProc(Mat original)
+    public static boolean scanForInfluenceProc(Mat original)
     {
         Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
 
         Mat eaterInfluenceFilter = applyHSVFilter(original, 90, 111, 159, 97, 231, 255);
-        double eaterPercent = getNonZeroPercent(eaterInfluenceFilter);
-        System.out.println("\tEater percent: " + eaterPercent);
+        double eaterPercent = getNonZeroPercent(original, eaterInfluenceFilter);
+        MinimapVisuals.writeMatToDisk("scanner718mask.png", eaterInfluenceFilter);
+
         if (eaterPercent > 7) return true;
 
         Mat exarchInfluenceFilter = applyHSVFilter(original, 0, 64, 85, 11, 165, 255);
-        double exarchPercent = getNonZeroPercent(exarchInfluenceFilter);
-        System.out.println("\tExarch percent: " + exarchPercent);
+        double exarchPercent = getNonZeroPercent(original, exarchInfluenceFilter);
         return exarchPercent > 7;
     }
 
@@ -70,18 +72,42 @@ public class ScreenScanner implements Runnable
 
         Scalar lowerBound = new Scalar(hMin, sMin, vMin);
         Scalar upperBound = new Scalar(hMax, sMax, vMax);
-        Mat mask = new Mat();
-        Core.inRange(hsv, lowerBound, upperBound, mask);
 
-        return mask;
+        // Create mask for the color filter
+        Mat colorMask = new Mat();
+        Core.inRange(hsv, lowerBound, upperBound, colorMask);
+
+        // Create mask for non-black pixels in the original BGR image
+        Mat blackMask = new Mat();
+        Core.inRange(original, new Scalar(1, 1, 1), new Scalar(255, 255, 255), blackMask); // non-black
+
+        // Combine the two masks
+        Mat combinedMask = new Mat();
+        Core.bitwise_and(colorMask, blackMask, combinedMask);
+
+        return combinedMask;
     }
 
-    private double getNonZeroPercent(Mat mat)
+    // Gets the percentage of non-zero pixels in the MASKED mat out of the total
+    // number of colorful pixels in the ORIGINAL mat (filtering out rgb < 20)
+    // Essentially, this filters out areas behind walls in places like Toxic Sewer map
+    private static double getNonZeroPercent(Mat original, Mat hsvMask)
     {
-        int nonZero = Core.countNonZero(mat);
-        int totalPixels = mat.rows() * mat.cols();
-        double percent = (nonZero / (double) totalPixels) * 100.0;
+        // Create mask of non-black pixels in original BGR image
+        Mat nonBlackMask = new Mat();
+        Core.inRange(original, new Scalar(20, 20, 20), new Scalar(255, 255, 255), nonBlackMask);
 
-        return percent;
+        MinimapVisuals.writeMatToDisk("scanner718nonblack.png", nonBlackMask);
+
+        // Apply that non-black mask to the HSV mask (bitwise AND)
+        Mat validRegionMask = new Mat();
+        Core.bitwise_and(hsvMask, nonBlackMask, validRegionMask);
+
+        int matchingPixels = Core.countNonZero(validRegionMask);
+        int totalNonBlackPixels = Core.countNonZero(nonBlackMask);
+
+        if (totalNonBlackPixels == 0) return 0.0;
+
+        return (matchingPixels / (double) totalNonBlackPixels) * 100.0;
     }
 }
