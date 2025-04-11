@@ -80,7 +80,7 @@ public class MapRunner
             }
         }
 
-        bot.mouseRelease(MouseCode.LEFT);
+        bot.mouseRelease(MouseCode.LEFT, true);
         intermittentAttacker.stop();
         screenScanner.stop();
         try {
@@ -99,9 +99,9 @@ public class MapRunner
     {
         SleepUtils.delayAround(200);
 
-        bot.mouseMoveGeneralLocation(new Point(1920/2, 360), 40);
+        bot.mouseMoveGeneralLocation(new Point(1920/2, 360), 40, true);
 
-        bot.keyClick(KeyCode.N);
+        bot.keyClick(KeyCode.N, true);
 
         SleepUtils.delayAround(150);
 
@@ -113,11 +113,11 @@ public class MapRunner
             for (int i = 0; i < 5; i++)
             {
                 System.out.println("Couldn't find portal. " + i + "-th iteration");
-                bot.mouseClickForDuration(MouseCode.RIGHT, 700 + 300 * i, 2000 + 300 * i);
+                bot.mouseClickForDuration(MouseCode.RIGHT, 700 + 300 * i, 2000 + 300 * i, true);
 
                 SleepUtils.delayAround(200);
 
-                bot.keyClick(KeyCode.N);
+                bot.keyClick(KeyCode.N, true);
 
                 portalPoint = findPortal();
 
@@ -133,11 +133,11 @@ public class MapRunner
 
         System.out.println("Portal found at " + portalPoint.x + ", " + portalPoint.y);
 
-        bot.mouseMoveGeneralLocation(portalPoint);
+        bot.mouseMoveGeneralLocation(portalPoint, false);
 
         SleepUtils.delayAround(80);
 
-        bot.mouseClickOnceOrTwice(MouseCode.LEFT);
+        bot.mouseClickOnceOrTwice(MouseCode.LEFT, true);
 
         return true;
     }
@@ -212,16 +212,16 @@ public class MapRunner
             Point screenPoint = Legend.convertMinimapPointToScreen(point);
 
             // todo move this to a separate thread?
-            bot.mouseMoveGeneralLocation(screenPoint);
+            bot.mouseMoveGeneralLocation(screenPoint, true);
 
             // 1 in 5 chance
             if (ThreadLocalRandom.current().nextInt(1, 6) > 4)
             {
-                bot.keyClick(KeyCode.SPACE);
+                bot.keyClick(KeyCode.SPACE, true);
             }
         }
 
-        bot.mousePress(MouseCode.LEFT);
+        bot.mousePress(MouseCode.LEFT, true);
     }
 
     private final List<Point> recentSelections = new ArrayList<Point>();
