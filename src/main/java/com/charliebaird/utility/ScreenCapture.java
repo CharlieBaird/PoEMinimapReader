@@ -1,5 +1,6 @@
 package com.charliebaird.utility;
 
+import com.charliebaird.Minimap.MinimapVisuals;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
@@ -69,5 +70,12 @@ public class ScreenCapture {
         mat.put(0, 0, pixels);
 
         return mat;
+    }
+
+    public static void saveFullScreenshot(String path)
+    {
+        Mat fullscreenMat = captureFullscreenMat();
+
+        MinimapVisuals.writeMatToDisk(path, fullscreenMat);
     }
 }

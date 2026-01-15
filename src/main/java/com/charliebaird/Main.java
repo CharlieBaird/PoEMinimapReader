@@ -88,7 +88,7 @@ public class Main
 
                 MapRunner runner = new MapRunner();
                 runner.openMap();
-                runner.executiveLoop(2);
+                runner.executiveLoop(-1);
                 runner.exitMap();
             }
         }

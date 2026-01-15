@@ -117,6 +117,16 @@ public class MapRunner
 
     public void executiveLoop(int iterations)
     {
+        boolean runUntilInfluenceDone = false;
+        influenceDone = false;
+
+        if (iterations == -1)
+        {
+            // Run until eater influence is done and boss needs to be killed
+            iterations = 40;
+            runUntilInfluenceDone = true;
+        }
+
         for (int i = 0; i < iterations; i++)
         {
             influenceDetected = false;
@@ -130,13 +140,14 @@ public class MapRunner
             screenScannerThread = new Thread(screenScanner);
             screenScannerThread.start();
 
-            boolean success = outMapLoop(50);
+            boolean success = outMapLoop(30, runUntilInfluenceDone);
             if (!success) return;
         }
     }
 
+    boolean influenceDone = false;
     // Starts inside a map, ends inside new map (just portaled in)
-    public boolean outMapLoop(int iterations)
+    public boolean outMapLoop(int iterations, boolean runUntilInfluenceDone)
     {
         System.out.println("Starting new map");
         boolean exit = false;
@@ -176,6 +187,11 @@ public class MapRunner
 
         SleepUtils.delayAround(250);
 
+        if (influenceDone)
+        {
+            return false;
+        }
+
         portalOut();
 
         // Wait for character to be on screen (no loading screen)
@@ -193,13 +209,20 @@ public class MapRunner
         bot.mouseMoveGeneralLocation(new Point(950, 350), true);
         SleepUtils.delayAround(800);
         bot.mouseClick(MouseCode.LEFT, true);
-        SleepUtils.delayAround(500);
+        SleepUtils.delayAround(1000);
 
         // Safety check map device is open
         if (!utilRobot.getPixelColor(627, 625).equals(new Color(86, 81, 65)))
         {
             System.out.println("Map device open safety check failed");
+            ScreenCapture.saveFullScreenshot("fail.png");
             return false;
+        }
+
+        // Is influence done? (28/28)
+        if (runUntilInfluenceDone && utilRobot.getPixelColor(714, 506).equals(new Color(1, 200, 211)))
+        {
+            influenceDone = true;
         }
 
         Point mapInInventoryPoint = ScreenScanner.findMapInInventory();
@@ -425,6 +448,12 @@ public class MapRunner
         {
             Point screenPoint = Legend.convertMinimapPointToScreen(point);
             bot.mouseMoveGeneralLocation(screenPoint, false);
+
+            // 1 in 5 chance
+            if (ThreadLocalRandom.current().nextInt(1, 8) == 1)
+            {
+                bot.keyClick(KeyCode.SPACE, true);
+            }
         }
 
         if (iteration == 0)
