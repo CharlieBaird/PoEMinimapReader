@@ -11,6 +11,11 @@ public class Timer {
         System.out.println("Execution time: " + getElapsedMillis() + " ms");
     }
 
+    public static void stop(int i)
+    {
+        System.out.println("(" + i + "): Execution time: " + getElapsedMillis() + " ms");
+    }
+
     public static long getElapsedNanos() {
         return System.nanoTime() - startTime;
     }

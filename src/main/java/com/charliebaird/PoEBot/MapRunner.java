@@ -83,15 +83,7 @@ public class MapRunner
 
     public void test()
     {
-        Mat original = ScreenCapture.captureScreenMat();
-        Timer.start();
-        MinimapExtractor minimap = new MinimapExtractor(true);
-        minimap.resolve(original);
-        Timer.stop();
-
-        List<Point> revealPoints = minimap.findRevealPoints();
-
-        minimap.saveFinalMinimap("iteration.png");
+        Point mapInInventoryPoint = ScreenScanner.findMapInInventory();
     }
 
     public void openMap() {}
@@ -137,11 +129,6 @@ public class MapRunner
         }
 
         SleepUtils.delayAround(250);
-
-        if (true)
-        {
-            return;
-        }
 
         portalOut();
 
@@ -345,7 +332,7 @@ public class MapRunner
         MinimapExtractor minimap = new MinimapExtractor(true);
         minimap.resolve(original);
         minimap.saveFinalMinimap("iteration " + iteration + ".png");
-        Timer.stop();
+        Timer.stop(iteration);
 
         List<Point> revealPoints = minimap.findRevealPoints();
 
@@ -359,6 +346,7 @@ public class MapRunner
 
         Point point = findBestRevealPoint(revealPoints, recentSelections);
         recentSelections.add(point);
+        System.out.println();
 //        recentSelections.addFirst(point);
 //        if (recentSelections.size() > 6)
 //        {
@@ -373,7 +361,7 @@ public class MapRunner
             bot.mouseMoveGeneralLocation(screenPoint, false);
 
             // 1 in 5 chance
-            if (ThreadLocalRandom.current().nextInt(1, 6) > 4)
+            if (ThreadLocalRandom.current().nextInt(1, 8) == 1)
             {
                 bot.keyClick(KeyCode.SPACE, true);
             }
@@ -388,44 +376,75 @@ public class MapRunner
     private static final double LIST_POSITION_WEIGHT = 1.0;
     private static final double DISTANCE_WEIGHT = 100.0;
     public static Point findBestRevealPoint(List<Point> revealPoints, List<Point> recentSelections) {
-        Point bestPoint = null;
-        double bestScore = Double.NEGATIVE_INFINITY;
+        if (recentSelections == null || recentSelections.isEmpty())
+        {
+            return revealPoints.getFirst();
+        }
 
-        for (int i = 0; i < revealPoints.size(); i++) {
-            Point p = revealPoints.get(i);
+        Point bestPoint = revealPoints.getFirst();
+        double bestScore = -1000;
 
-            // Score for being early in the list (higher score for earlier points)
-            double listScore = LIST_POSITION_WEIGHT * (revealPoints.size() - i);
+        Point mostRecentPoint = recentSelections.getLast();
+        double previousAngle = Math.atan2(mostRecentPoint.y - 395, mostRecentPoint.x - 701); // -pi to pi
 
-            // Score based on proximity to recent selections
-            double proximityScore = 0.0;
-            int count = Math.min(6, recentSelections.size());
+        for (Point point : revealPoints)
+        {
+            double newAngle = Math.atan2(point.y - 395, point.x - 701);
+            double score;
 
-            for (int j = 0; j < count; j++) {
-                Point recent = recentSelections.get(recentSelections.size() - 1 - j);
-                double distance = Legend.euclideanDistance(p, recent);
-
-                // If distance is too close, we might be stuck, so punish this point
-                if (distance < 10) {
-                    proximityScore = -100;
-                    continue;
-                }
-
-                // Inverse distance: closer = higher score (avoid div by zero)
-                proximityScore += 1.0 / (distance + 1e-5);
+            try {
+                score = 1 / Math.abs(newAngle - previousAngle);
+            }
+            catch (Exception e) {
+                // Divide by zero. Want negative infinity score since this means it's in the same place as previous point. Stuck?
+                score = -1000;
             }
 
-            double totalScore = listScore + (DISTANCE_WEIGHT * proximityScore);
-            System.out.printf("  List Score: %.2f, Proximity Score: %.5f, Total Score: %.5f%n",
-                    listScore, proximityScore * DISTANCE_WEIGHT, totalScore);
-            if (totalScore > bestScore) {
-                bestScore = totalScore;
-                bestPoint = p;
+            System.out.println("Point has score " + score + " at loc " + point.x + ", " + point.y);
+            if (score > bestScore)
+            {
+                bestPoint = point;
+                bestScore = score;
             }
         }
 
-        System.out.println();
-
         return bestPoint;
+
+//        for (int i = 0; i < revealPoints.size(); i++) {
+//            Point p = revealPoints.get(i);
+//
+//            // Score for being early in the list (higher score for earlier points)
+//            double listScore = LIST_POSITION_WEIGHT * (revealPoints.size() - i);
+//
+//            // Score based on proximity to recent selections
+//            double proximityScore = 0.0;
+//            int count = Math.min(6, recentSelections.size());
+//
+//            for (int j = 0; j < count; j++) {
+//                Point recent = recentSelections.get(recentSelections.size() - 1 - j);
+//                double distance = Legend.euclideanDistance(p, recent);
+//
+//                // If distance is too close, we might be stuck, so punish this point
+//                if (distance < 10) {
+//                    proximityScore = -100;
+//                    continue;
+//                }
+//
+//                // Inverse distance: closer = higher score (avoid div by zero)
+//                proximityScore += 1.0 / (distance + 1e-5);
+//            }
+//
+//            double totalScore = listScore + (DISTANCE_WEIGHT * proximityScore);
+//            System.out.printf("  List Score: %.2f, Proximity Score: %.5f, Total Score: %.5f%n",
+//                    listScore, proximityScore * DISTANCE_WEIGHT, totalScore);
+//            if (totalScore > bestScore) {
+//                bestScore = totalScore;
+//                bestPoint = p;
+//            }
+//        }
+//
+//        System.out.println();
+//
+//        return bestPoint;
     }
 }

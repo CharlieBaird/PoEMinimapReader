@@ -32,7 +32,7 @@ public class ScreenScanner implements Runnable
 
             if (scanningForInfluence)
             {
-                boolean influenceProc = scanForInfluenceProc(mat);
+                boolean influenceProc = scanForInfluenceProc(mat, iteration);
                 if (influenceProc)
                 {
                     System.out.println("\tInfluence procced in iteration " + iteration);
@@ -40,7 +40,7 @@ public class ScreenScanner implements Runnable
                     mapRunner.influenceDetected();
                 }
 
-//                writeMatToDisk("scanner" + iteration + ".png", mat, true);
+                writeMatToDisk("influence_scan/scanner" + iteration + ".png", mat, true);
             }
         }
     }
@@ -50,19 +50,27 @@ public class ScreenScanner implements Runnable
         running = false;
     }
 
-    public static boolean scanForInfluenceProc(Mat original)
+    public static final boolean CHECK_FOR_EATER = true;
+    public static boolean scanForInfluenceProc(Mat original, int iteration)
     {
         Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
 
-        Mat eaterInfluenceFilter = applyHSVFilter(original, 90, 111, 159, 97, 231, 255);
-        double eaterPercent = getNonZeroPercent(original, eaterInfluenceFilter);
-        MinimapVisuals.writeMatToDisk("scanner718mask.png", eaterInfluenceFilter);
+        if (CHECK_FOR_EATER)
+        {
+            Mat eaterInfluenceFilter = applyHSVFilter(original, 90, 111, 159, 97, 231, 255);
+            double eaterPercent = getNonZeroPercent(original, eaterInfluenceFilter);
+            MinimapVisuals.writeMatToDisk("influence_scan/scanner" + iteration + "_filtered.png", eaterInfluenceFilter);
 
-        if (eaterPercent > 7) return true;
+            return eaterPercent > 7;
+        }
 
-        Mat exarchInfluenceFilter = applyHSVFilter(original, 0, 64, 85, 11, 165, 255);
-        double exarchPercent = getNonZeroPercent(original, exarchInfluenceFilter);
-        return exarchPercent > 7;
+        else
+        {
+            Mat exarchInfluenceFilter = applyHSVFilter(original, 0, 64, 85, 11, 165, 255);
+            double exarchPercent = getNonZeroPercent(original, exarchInfluenceFilter);
+
+            return exarchPercent > 7;
+        }
     }
 
     public static Mat applyHSVFilter(Mat original, int hMin, int sMin, int vMin, int hMax, int sMax, int vMax)
@@ -113,8 +121,13 @@ public class ScreenScanner implements Runnable
     {
         Mat original = ScreenCapture.captureInventoryMat();
 
-        // Apply hsv filter to highlight map color
+        // Apply hsv filter to highlight map color (current)
         Mat hsvApplied = applyHSVFilter(original, 43, 0, 25, 70, 36, 142);
+
+        // Apply hsv filter to highlight map color (legacy)
+        Mat hsvApplied2 = applyHSVFilter(original, 8, 0, 32, 56, 73, 127);
+
+        Core.bitwise_or(hsvApplied, hsvApplied2, hsvApplied);
 
         // Clean up noise
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
@@ -135,7 +148,7 @@ public class ScreenScanner implements Runnable
             return Integer.compare(rowA, rowB);
         });
 
-        MinimapVisuals.writeMatToDisk("inventory.png", hsvApplied);
+        MinimapVisuals.writeMatToDisk("inventory.png", original);
 
         if (mapLocs.isEmpty()) return null;
 
