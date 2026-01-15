@@ -6,6 +6,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.charliebaird.Minimap.MinimapVisuals.*;
@@ -187,7 +188,7 @@ public class MinimapExtractor
 
         // Build lines connecting "close enough" blue segments
 //        List<ContourEdge> edges = new ArrayList<>();
-//        double maxConnectDistance = 35;
+//        double maxConnectDistance = 150;
 //        for (int i = 0; i < filteredContours.size(); i++) {
 //            for (int j = i + 1; j < filteredContours.size(); j++) {
 //                MatOfPoint c1 = filteredContours.get(i);
@@ -235,7 +236,7 @@ public class MinimapExtractor
 //                Imgproc.line(mask, extendedP1, extendedP2, new Scalar(255), 4);
 //            }
 //        }
-
+//
 //        contours.clear();
 //        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 //
@@ -245,6 +246,8 @@ public class MinimapExtractor
 //                filteredContours.add(contour);
 //            }
 //        }
+//
+//        writeMatToDisk("blueMerged.png", mask);
 
         // Sort the discovered contours by total area
         filteredContours.sort((c1, c2) -> {
@@ -382,6 +385,14 @@ public class MinimapExtractor
     public void saveFinalMinimap(String path)
     {
         writeMatToDisk(path, fullMinimap, writeToDisk);
+    }
+
+    public void debugCircle(String path, Scalar scalar, Point p)
+    {
+        if (writeToDisk && p != null)
+        {
+            Imgproc.circle(fullMinimap, p, 16, scalar, -1);
+        }
     }
 
     class ContourEdge implements Comparable<ContourEdge>

@@ -1,5 +1,6 @@
 package com.charliebaird.utility;
 
+import com.charliebaird.Minimap.MinimapVisuals;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
@@ -18,34 +19,20 @@ public class ScreenCapture {
         }
     }
 
-//    public static Mat captureScreenMat()
-//    {
-//        // Capture screenshot from middle monitor
-//
-//        BufferedImage screenshot = robot.createScreenCapture(captureRect);
-//
-//        return bufferedImageToMat(screenshot);
-//    }
-//
-//    public static Mat bufferedImageToMat(BufferedImage bi) {
-//        // Convert to a byte-based format first (BGR)
-//        BufferedImage convertedImg = new BufferedImage(
-//                bi.getWidth(), bi.getHeight(),
-//                BufferedImage.TYPE_3BYTE_BGR
-//        );
-//        convertedImg.getGraphics().drawImage(bi, 0, 0, null);
-//
-//        byte[] data = ((DataBufferByte) convertedImg.getRaster().getDataBuffer()).getData();
-//        Mat mat = new Mat(convertedImg.getHeight(), convertedImg.getWidth(), CvType.CV_8UC3);
-//        mat.put(0, 0, data);
-//        return mat;
-//    }
+    private final static Rectangle centerRect = new Rectangle(259, 125, 1920 - 259 - 259, 1080 - 145 - 145);
+    private final static Rectangle fullscreenRect = new Rectangle(0, 0, 1920, 1080);
 
-
-    private final static Rectangle captureRect = new Rectangle(259, 125, 1920 - 259 - 259, 1080 - 145 - 145);
+    public static Mat captureFullscreenMat()
+    {
+        return captureMat(fullscreenRect);
+    }
 
     public static Mat captureScreenMat() {
-        BufferedImage image = robot.createScreenCapture(captureRect);
+        return captureMat(centerRect);
+    }
+
+    private static Mat captureMat(Rectangle rect) {
+        BufferedImage image = robot.createScreenCapture(rect);
 
         // Fastest path: TYPE_3BYTE_BGR is most compatible with OpenCV
         if (image.getType() != BufferedImage.TYPE_3BYTE_BGR) {
@@ -61,5 +48,34 @@ public class ScreenCapture {
         mat.put(0, 0, pixels);
 
         return mat;
+    }
+
+    public static Mat captureInventoryMat()
+    {
+        Rectangle rect = new Rectangle(1273, 590, 1911-1273-8, 857-590-8);
+
+        BufferedImage image = robot.createScreenCapture(rect);
+
+        // Fastest path: TYPE_3BYTE_BGR is most compatible with OpenCV
+        if (image.getType() != BufferedImage.TYPE_3BYTE_BGR) {
+            BufferedImage converted = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+            Graphics2D g = converted.createGraphics();
+            g.drawImage(image, 0, 0, null);
+            g.dispose();
+            image = converted;
+        }
+
+        byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
+        mat.put(0, 0, pixels);
+
+        return mat;
+    }
+
+    public static void saveFullScreenshot(String path)
+    {
+        Mat fullscreenMat = captureFullscreenMat();
+
+        MinimapVisuals.writeMatToDisk(path, fullscreenMat);
     }
 }

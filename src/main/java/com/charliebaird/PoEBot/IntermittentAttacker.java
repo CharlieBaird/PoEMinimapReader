@@ -18,13 +18,14 @@ public class IntermittentAttacker implements Runnable
     @Override
     public void run()
     {
-        SleepUtils.sleep(800, 3500, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+        SleepUtils.sleep(2000, 3500, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
         while (running) {
-            System.out.println("Attacking");
+//            System.out.println("Attacking");
 
-            bot.mouseClickForDuration(MouseCode.RIGHT, 60, 500);
+            bot.mouseClickForDuration(MouseCode.RIGHT, 400, 600, true);
 
-            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+//            SleepUtils.sleep(500, 2000, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+            SleepUtils.sleep(1000, 2500, SleepUtils.BiasType.EXPONENTIAL, 6, 0, true);
         }
     }
 
