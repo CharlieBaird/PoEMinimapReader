@@ -3,11 +3,10 @@ package com.charliebaird.PoEBot;
 import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+
+import java.util.ArrayList;
 
 import static com.charliebaird.Minimap.MinimapVisuals.writeMatToDisk;
 
@@ -108,5 +107,99 @@ public class ScreenScanner implements Runnable
         if (totalNonBlackPixels == 0) return 0.0;
 
         return (matchingPixels / (double) totalNonBlackPixels) * 100.0;
+    }
+
+    public static Point findMapInInventory()
+    {
+        Mat original = ScreenCapture.captureInventoryMat();
+
+        // Apply hsv filter to highlight map color
+        Mat hsvApplied = applyHSVFilter(original, 43, 0, 25, 70, 36, 142);
+
+        // Clean up noise
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
+        Imgproc.morphologyEx(hsvApplied, hsvApplied, Imgproc.MORPH_OPEN, kernel);
+
+        ArrayList<Point> mapLocs = findOccupiedCells(hsvApplied);
+
+        mapLocs.sort((a, b) -> {
+            int colA = (int) a.y;
+            int colB = (int) b.y;
+
+            if (colA != colB)
+                return Integer.compare(colA, colB);
+
+            int rowA = (int) a.x;
+            int rowB = (int) b.x;
+
+            return Integer.compare(rowA, rowB);
+        });
+
+        MinimapVisuals.writeMatToDisk("inventory.png", hsvApplied);
+
+        if (mapLocs.isEmpty()) return null;
+
+        Point selectedMap = mapLocs.getLast();
+
+        // Convert inventory coordinate to pixel on screen
+        int baseX = 1296;
+        int baseY = 614;
+
+        int calcX = (int) Math.floor(baseX + selectedMap.y * 52.5);
+        int calcY = (int) Math.floor(baseY + selectedMap.x * 52.5);
+
+        return new Point(calcX, calcY);
+    }
+
+    // Given a binary, cleaned, filtered mat, find all maps in inventory.
+    private static ArrayList<Point> findOccupiedCells(Mat filtered) {
+
+        if (filtered.empty())
+            throw new IllegalArgumentException("Input Mat is empty");
+
+        int rows = 5;
+        int cols = 12;
+
+        int imgW = filtered.cols();
+        int imgH = filtered.rows();
+
+        double cellW = (double) imgW / cols;
+        double cellH = (double) imgH / rows;
+
+        Mat labels = new Mat();
+        Mat stats = new Mat();
+        Mat centroids = new Mat();
+
+        Imgproc.connectedComponentsWithStats(
+                filtered, labels, stats, centroids, 8, CvType.CV_32S
+        );
+
+        boolean[][] seen = new boolean[rows][cols];
+        ArrayList<Point> results = new ArrayList<>();
+
+        for (int i = 1; i < stats.rows(); i++) { // skip background
+            int area = (int) stats.get(i, Imgproc.CC_STAT_AREA)[0];
+            if (area < 50) continue; // noise threshold — tune if needed
+
+            double cx = centroids.get(i, 0)[0];
+            double cy = centroids.get(i, 1)[0];
+
+            int col = (int) (cx / cellW);
+            int row = (int) (cy / cellH);
+
+            if (row < 0 || row >= rows || col < 0 || col >= cols)
+                continue;
+
+            if (!seen[row][col]) {
+                seen[row][col] = true;
+                results.add(new Point(row, col));
+            }
+        }
+
+        labels.release();
+        stats.release();
+        centroids.release();
+
+        return results;
     }
 }

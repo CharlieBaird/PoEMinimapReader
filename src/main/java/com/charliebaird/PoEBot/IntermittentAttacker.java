@@ -18,7 +18,7 @@ public class IntermittentAttacker implements Runnable
     @Override
     public void run()
     {
-        SleepUtils.sleep(3000, 5000, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
+        SleepUtils.sleep(2000, 3500, SleepUtils.BiasType.GAUSSIAN, 0.5, 0.7, false);
         while (running) {
 //            System.out.println("Attacking");
 

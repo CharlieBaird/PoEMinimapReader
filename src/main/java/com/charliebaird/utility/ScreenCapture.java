@@ -48,4 +48,26 @@ public class ScreenCapture {
 
         return mat;
     }
+
+    public static Mat captureInventoryMat()
+    {
+        Rectangle rect = new Rectangle(1273, 590, 1911-1273-8, 857-590-8);
+
+        BufferedImage image = robot.createScreenCapture(rect);
+
+        // Fastest path: TYPE_3BYTE_BGR is most compatible with OpenCV
+        if (image.getType() != BufferedImage.TYPE_3BYTE_BGR) {
+            BufferedImage converted = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+            Graphics2D g = converted.createGraphics();
+            g.drawImage(image, 0, 0, null);
+            g.dispose();
+            image = converted;
+        }
+
+        byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
+        mat.put(0, 0, pixels);
+
+        return mat;
+    }
 }

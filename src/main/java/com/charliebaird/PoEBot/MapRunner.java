@@ -8,6 +8,7 @@ import com.TeensyBottingLib.InputCodes.MouseCode;
 import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
+import com.sun.jna.platform.win32.User32;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
@@ -33,6 +34,27 @@ public class MapRunner
     private final ScreenScanner screenScanner;
     private final Thread screenScannerThread;
 
+    public static MapRunner runnerSingleton;
+
+    public static void cleanExit()
+    {
+        boolean lShiftDown =
+                (User32.INSTANCE.GetAsyncKeyState(0xA0) & 0x8000) != 0; // VK_LSHIFT
+
+        if (lShiftDown) {
+            runnerSingleton.bot.keyRelease(KeyCode.LSHIFT, false);
+        }
+
+        boolean lCtrlDown =
+                (User32.INSTANCE.GetAsyncKeyState(0xA2) & 0x8000) != 0; // VK_LCONTROL
+
+        if (lCtrlDown) {
+            runnerSingleton.bot.keyRelease(KeyCode.LCTRL, false);
+        }
+
+
+    }
+
     public MapRunner()
     {
         bot = new PoEBot();
@@ -55,36 +77,21 @@ public class MapRunner
         screenScanner = new ScreenScanner(this);
         screenScannerThread = new Thread(screenScanner);
         screenScannerThread.start();
+
+        runnerSingleton = this;
     }
 
     public void test()
     {
         Mat original = ScreenCapture.captureScreenMat();
+        Timer.start();
         MinimapExtractor minimap = new MinimapExtractor(true);
         minimap.resolve(original);
+        Timer.stop();
 
         List<Point> revealPoints = minimap.findRevealPoints();
 
-        if (revealPoints == null || revealPoints.isEmpty())
-        {
-            System.out.println("No reveal points found");
-            return;
-        }
-
-        Point point = findBestRevealPoint(revealPoints, recentSelections);
-        recentSelections.add(point);
-
-        if (point != null)
-        {
-            minimap.debugCircle("debug.png", new Scalar(255,200,200), point);
-
-            Point screenPoint = Legend.convertMinimapPointToScreen(point);
-
-            // todo move this to a separate thread?
-            bot.mouseMoveGeneralLocation(screenPoint, false);
-        }
-
-        minimap.saveFinalMinimap("final.png");
+        minimap.saveFinalMinimap("iteration.png");
     }
 
     public void openMap() {}
@@ -110,7 +117,7 @@ public class MapRunner
     {
         for (int i = 0; i < iterations; i++)
         {
-            runMapLoop();
+            runMapLoop(i);
 
             if (influenceDetected)
             {
@@ -131,6 +138,11 @@ public class MapRunner
 
         SleepUtils.delayAround(250);
 
+        if (true)
+        {
+            return;
+        }
+
         portalOut();
 
         // Wait for character to be on screen (no loading screen)
@@ -148,17 +160,83 @@ public class MapRunner
         bot.mouseMoveGeneralLocation(new Point(950, 350), true);
         SleepUtils.delayAround(800);
         bot.mouseClick(MouseCode.LEFT, true);
+        SleepUtils.delayAround(500);
+
+        // Safety check map device is open
+        if (!utilRobot.getPixelColor(627, 625).equals(new Color(86, 81, 65)))
+        {
+            System.out.println("Map device open safety check failed");
+            return;
+        }
+
+        Point mapInInventoryPoint = ScreenScanner.findMapInInventory();
+
+        if (mapInInventoryPoint == null)
+        {
+            System.out.println("Inventory out of maps");
+            return;
+        }
+
+        bot.mouseMoveGeneralLocation(mapInInventoryPoint, false);
+
+        SleepUtils.delayAround(50);
+        bot.keyPress(KeyCode.LCTRL, false);
+        SleepUtils.delayAround(50);
+        bot.mouseClick(MouseCode.LEFT, false);
+        SleepUtils.delayAround(50);
+        bot.keyRelease(KeyCode.LCTRL, false);
+        SleepUtils.delayAround(50);
+
+        bot.mouseMoveGeneralLocation(new Point(620, 848), false);
+        bot.mouseClick(MouseCode.LEFT, false);
+
+        SleepUtils.delayAround(500);
+        bot.mouseMoveGeneralLocation(new Point(993, 474), false);
+        SleepUtils.delayAround(1750);
+
+        // Click portal to enter map
+        bot.mouseClick(MouseCode.LEFT, false);
+
+        // Sleep until map is entered
+        SleepUtils.delayAround(2000);
+        while (true)
+        {
+            if (utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
+            {
+                break;
+            }
+
+            SleepUtils.delayAround(250);
+        }
+
+        // Repeat cycle
     }
 
     public boolean portalOut()
     {
-        SleepUtils.delayAround(200);
+        bot.keyClick(KeyCode.N, false);
 
-        bot.mouseMoveGeneralLocation(new Point(1920/2, 360), 40, true);
+        bot.mouseMoveGeneralLocation(new Point(956, 320), 20, false);
 
-        bot.keyClick(KeyCode.N, true);
+        SleepUtils.delayAround(300);
 
-        SleepUtils.delayAround(150);
+        bot.mouseClick(MouseCode.LEFT, false);
+
+        // Check success?
+        // Wait for character to be on screen (no loading screen)
+        for (int i=0; i<30; i++)
+        {
+            if (!utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
+            {
+                System.out.println("Quick portal worked, exited map");
+                return true;
+            }
+
+            SleepUtils.delayAround(15);
+        }
+
+        // If here, failed to quick portal.
+        bot.mouseMoveGeneralLocation(new Point(1099, 405), false);
 
         // Scan screen for red portal
         Point portalPoint = findPortal();
@@ -168,9 +246,9 @@ public class MapRunner
             for (int i = 0; i < 5; i++)
             {
                 System.out.println("Couldn't find portal. " + i + "-th iteration");
-                bot.mouseClickForDuration(MouseCode.RIGHT, 700 + 300 * i, 2000 + 300 * i, true);
+                bot.mouseClickForDuration(MouseCode.RIGHT, 700 + 300 * i, 2000 + 300 * i, false);
 
-                SleepUtils.delayAround(200);
+                SleepUtils.delayAround(500);
 
                 bot.keyClick(KeyCode.N, true);
 
@@ -260,12 +338,13 @@ public class MapRunner
         return null;
     }
 
-    public void  runMapLoop()
+    public boolean runMapLoop(int iteration)
     {
         Mat original = ScreenCapture.captureScreenMat();
         Timer.start();
         MinimapExtractor minimap = new MinimapExtractor(true);
         minimap.resolve(original);
+        minimap.saveFinalMinimap("iteration " + iteration + ".png");
         Timer.stop();
 
         List<Point> revealPoints = minimap.findRevealPoints();
@@ -275,11 +354,16 @@ public class MapRunner
         if (revealPoints == null || revealPoints.isEmpty())
         {
             System.out.println("No reveal points found");
-            return;
+            return false;
         }
 
         Point point = findBestRevealPoint(revealPoints, recentSelections);
         recentSelections.add(point);
+//        recentSelections.addFirst(point);
+//        if (recentSelections.size() > 6)
+//        {
+//            recentSelections.removeLast();
+//        }
 
         if (point != null)
         {
@@ -296,6 +380,8 @@ public class MapRunner
         }
 
         bot.mousePress(MouseCode.LEFT, true);
+
+        return true;
     }
 
     private final List<Point> recentSelections = new ArrayList<Point>();
@@ -330,13 +416,15 @@ public class MapRunner
             }
 
             double totalScore = listScore + (DISTANCE_WEIGHT * proximityScore);
-//            System.out.printf("  List Score: %.2f, Proximity Score: %.5f, Total Score: %.5f%n",
-//                    listScore, proximityScore * DISTANCE_WEIGHT, totalScore);
+            System.out.printf("  List Score: %.2f, Proximity Score: %.5f, Total Score: %.5f%n",
+                    listScore, proximityScore * DISTANCE_WEIGHT, totalScore);
             if (totalScore > bestScore) {
                 bestScore = totalScore;
                 bestPoint = p;
             }
         }
+
+        System.out.println();
 
         return bestPoint;
     }

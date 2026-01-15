@@ -20,69 +20,71 @@ import static com.charliebaird.PoEBot.MapRunner.findPortal;
 
 public class Main
 {
-    static { nu.pattern.OpenCV.loadLocally(); }
+    static {
+        nu.pattern.OpenCV.loadLocally();
+    }
 
     static final boolean writeToDisk = true;
 
     public static void main(String[] args)
     {
-//        SleepUtils.testDistributions();
+        try {
+            if (args.length != 1) {
+                String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
+                Mat original = Imgcodecs.imread(imagePath);
 
-        if (args.length != 1)
-        {
-            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
-            Mat original = Imgcodecs.imread(imagePath);
+                Timer.start();
+                MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+                minimap.resolve(original);
+                Timer.stop();
+                minimap.saveFinalMinimap("final.png");
+            } else if (args[0].equals("-l")) {
+                MapRunner runner = new MapRunner();
 
-            Timer.start();
-            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-            minimap.resolve(original);
-            Timer.stop();
-            minimap.saveFinalMinimap("final.png");
-        }
+                runner.openMap();
 
-        else if (args[0].equals("-l"))
-        {
+//            runner.executiveLoop(20);
+                runner.test();
+
+                runner.exitMap();
+
 //            Timer.start();
-            Mat original = ScreenCapture.captureScreenMat();
+//            Mat original = ScreenCapture.captureScreenMat();
 //            Timer.stop();
 //
 //            Timer.start();
-            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-            minimap.resolve(original);
+//            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+//            minimap.resolve(original);
 //            Timer.stop();
-            minimap.saveFinalMinimap("final.png");
+//            minimap.saveFinalMinimap("final.png");
 //
-        }
-
-        else if (args[0].equals("-l"))
-        {
+            } else if (args[0].equals("-l")) {
 //            String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/portalsample2.png";
 //            Mat original = Imgcodecs.imread(imagePath);
 
-            Mat original = ScreenCapture.captureFullscreenMat();
-            MinimapVisuals.writeMatToDisk("_test2.png", original);
+                Mat original = ScreenCapture.captureFullscreenMat();
+                MinimapVisuals.writeMatToDisk("_test2.png", original);
 
 //            Timer.start();
 //            boolean influenceProc = ScreenScanner.scanForInfluenceProc(original);
 //            Timer.stop();
 
-            Point portal = findPortal(original);
-            System.out.println(portal.x + " " + portal.y);
-        }
+                Point portal = findPortal(original);
+                System.out.println(portal.x + " " + portal.y);
+            } else if (args[0].equals("-r")) {
+                MapRunner runner = new MapRunner();
 
-        else if (args[0].equals("-r"))
-        {
-            MapRunner runner = new MapRunner();
+                runner.openMap();
 
-            runner.openMap();
-
-            runner.executiveLoop(20);
+                runner.executiveLoop(50);
 //            runner.test();
 
-            runner.exitMap();
+                runner.exitMap();
+            }
+        } finally {
+            MapRunner.cleanExit();
+            System.exit(0);
         }
-
-        System.exit(0);
     }
 
 }
