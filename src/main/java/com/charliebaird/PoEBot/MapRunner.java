@@ -9,12 +9,14 @@ import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
 import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -25,14 +27,14 @@ public class MapRunner
     private final Robot utilRobot;
     private final PoEBot bot;
 
-    private final MouseJiggler mouseJiggler;
-    private final Thread mouseJigglerThread;
+    private MouseJiggler mouseJiggler;
+    private Thread mouseJigglerThread;
 
-    private final IntermittentAttacker intermittentAttacker;
-    private final Thread intermittentAttackerThread;
+    private IntermittentAttacker intermittentAttacker;
+    private Thread intermittentAttackerThread;
 
-    private final ScreenScanner screenScanner;
-    private final Thread screenScannerThread;
+    private ScreenScanner screenScanner;
+    private Thread screenScannerThread;
 
     public static MapRunner runnerSingleton;
 
@@ -52,7 +54,13 @@ public class MapRunner
             runnerSingleton.bot.keyRelease(KeyCode.LCTRL, false);
         }
 
-
+        Robot r = null;
+        try {
+            r = new Robot();
+        } catch (AWTException e) {
+            throw new RuntimeException(e);
+        }
+        r.keyRelease(KeyEvent.VK_F4);
     }
 
     public MapRunner()
@@ -65,28 +73,30 @@ public class MapRunner
         }
 
         // Init mouse jiggler background thread, mimics human-like constant mouse jiggle
-
         mouseJiggler = new MouseJiggler(bot);
         mouseJigglerThread = new Thread(mouseJiggler);
         mouseJigglerThread.start();
-
-        intermittentAttacker = new IntermittentAttacker(bot);
-        intermittentAttackerThread = new Thread(intermittentAttacker);
-        intermittentAttackerThread.start();
-
-        screenScanner = new ScreenScanner(this);
-        screenScannerThread = new Thread(screenScanner);
-        screenScannerThread.start();
 
         runnerSingleton = this;
     }
 
     public void test()
     {
-        Point mapInInventoryPoint = ScreenScanner.findMapInInventory();
+        Mat original = ScreenCapture.captureScreenMat();
+        Timer.start();
+        MinimapExtractor minimap = new MinimapExtractor(true);
+        minimap.resolve(original);
+        minimap.saveFinalMinimap("test.png");
+        Timer.stop();
     }
 
-    public void openMap() {}
+    public void openMap()
+    {
+        bot.mouseMoveGeneralLocation(new Point(46, 37), 10, false);
+        SleepUtils.delayAround(300);
+        bot.mouseClick(MouseCode.LEFT, false);
+        SleepUtils.delayAround(300);
+    }
 
     public void exitMap()
     {
@@ -109,24 +119,60 @@ public class MapRunner
     {
         for (int i = 0; i < iterations; i++)
         {
-            runMapLoop(i);
+            influenceDetected = false;
+            recentSelections.clear();
 
-            if (influenceDetected)
-            {
-                break;
+            intermittentAttacker = new IntermittentAttacker(bot);
+            intermittentAttackerThread = new Thread(intermittentAttacker);
+            intermittentAttackerThread.start();
 
+            screenScanner = new ScreenScanner(this);
+            screenScannerThread = new Thread(screenScanner);
+            screenScannerThread.start();
+
+            boolean success = outMapLoop(50);
+            if (!success) return;
+        }
+    }
+
+    // Starts inside a map, ends inside new map (just portaled in)
+    public boolean outMapLoop(int iterations)
+    {
+        System.out.println("Starting new map");
+        boolean exit = false;
+
+        try {
+            for (int i = 0; i < iterations; i++) {
+                boolean success = inMapLoop(i);
+                if (!success) {
+                    exit = true;
+                    break;
+                }
+
+                if (influenceDetected) {
+                    break;
+                }
             }
+        } finally {
+            bot.keyRelease(KeyCode.F4, true);
+            intermittentAttacker.stop();
+            screenScanner.stop();
         }
 
-        bot.mouseRelease(MouseCode.LEFT, true);
-        intermittentAttacker.stop();
-        screenScanner.stop();
+        // blocking calls go AFTER finally
         try {
             intermittentAttackerThread.join();
             screenScannerThread.join();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread join interrupted", e);
         }
+
+        if (exit)
+        {
+            return false;
+        }
+
 
         SleepUtils.delayAround(250);
 
@@ -153,7 +199,7 @@ public class MapRunner
         if (!utilRobot.getPixelColor(627, 625).equals(new Color(86, 81, 65)))
         {
             System.out.println("Map device open safety check failed");
-            return;
+            return false;
         }
 
         Point mapInInventoryPoint = ScreenScanner.findMapInInventory();
@@ -161,7 +207,7 @@ public class MapRunner
         if (mapInInventoryPoint == null)
         {
             System.out.println("Inventory out of maps");
-            return;
+            return false;
         }
 
         bot.mouseMoveGeneralLocation(mapInInventoryPoint, false);
@@ -197,10 +243,13 @@ public class MapRunner
         }
 
         // Repeat cycle
+        return true;
     }
 
     public boolean portalOut()
     {
+        LogTailer.observe();
+
         bot.keyClick(KeyCode.N, false);
 
         bot.mouseMoveGeneralLocation(new Point(956, 320), 20, false);
@@ -211,7 +260,7 @@ public class MapRunner
 
         // Check success?
         // Wait for character to be on screen (no loading screen)
-        for (int i=0; i<30; i++)
+        for (int i=0; i<100; i++)
         {
             if (!utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
             {
@@ -219,8 +268,11 @@ public class MapRunner
                 return true;
             }
 
-            SleepUtils.delayAround(15);
+            SleepUtils.delayAround(30);
         }
+
+        List<String> messages = LogTailer.getLast();
+        LogTailer.printMessages(messages);
 
         // If here, failed to quick portal.
         bot.mouseMoveGeneralLocation(new Point(1099, 405), false);
@@ -325,60 +377,72 @@ public class MapRunner
         return null;
     }
 
-    public boolean runMapLoop(int iteration)
+    public boolean inMapLoop(int iteration)
     {
-        Mat original = ScreenCapture.captureScreenMat();
-        Timer.start();
-        MinimapExtractor minimap = new MinimapExtractor(true);
-        minimap.resolve(original);
-        minimap.saveFinalMinimap("iteration " + iteration + ".png");
-        Timer.stop(iteration);
+        System.out.println("(" + iteration + "): In map loop");
 
-        List<Point> revealPoints = minimap.findRevealPoints();
+        List<Point> revealPoints = new ArrayList<>();
 
-        minimap.saveFinalMinimap("iteration.png");
-
-        if (revealPoints == null || revealPoints.isEmpty())
+        for (int i=0; i<5; i++)
         {
-            System.out.println("No reveal points found");
-            return false;
+            // Safety check, is escape open? Or not in instance?
+            if (!utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
+            {
+                System.out.println("Escape open, quitting");
+                return false;
+            }
+
+            Mat original = ScreenCapture.captureScreenMat();
+            Timer.start();
+            MinimapExtractor minimap = new MinimapExtractor(true);
+            minimap.resolve(original);
+            minimap.saveFinalMinimap("iteration " + iteration + ".png");
+            Timer.stop(iteration);
+
+            revealPoints = minimap.findRevealPoints();
+
+            minimap.saveFinalMinimap("iteration.png");
+
+            if (revealPoints == null || revealPoints.isEmpty())
+            {
+                System.out.println("No reveal points found in sub-iteration " + i);
+                SleepUtils.delayAround(300);
+            }
+            else
+            {
+                break;
+            }
         }
 
         Point point = findBestRevealPoint(revealPoints, recentSelections);
         recentSelections.add(point);
-        System.out.println();
-//        recentSelections.addFirst(point);
-//        if (recentSelections.size() > 6)
-//        {
-//            recentSelections.removeLast();
-//        }
+        if (recentSelections.size() > 10)
+        {
+            recentSelections.removeFirst();
+        }
 
         if (point != null)
         {
-             Point screenPoint = Legend.convertMinimapPointToScreen(point);
-
-            // todo move this to a separate thread?
+            Point screenPoint = Legend.convertMinimapPointToScreen(point);
             bot.mouseMoveGeneralLocation(screenPoint, false);
-
-            // 1 in 5 chance
-            if (ThreadLocalRandom.current().nextInt(1, 8) == 1)
-            {
-                bot.keyClick(KeyCode.SPACE, true);
-            }
         }
 
-        bot.mousePress(MouseCode.LEFT, true);
+        if (iteration == 0)
+        {
+            bot.keyPress(KeyCode.F4, true);
+        }
 
         return true;
     }
 
     private final List<Point> recentSelections = new ArrayList<Point>();
-    private static final double LIST_POSITION_WEIGHT = 1.0;
-    private static final double DISTANCE_WEIGHT = 100.0;
     public static Point findBestRevealPoint(List<Point> revealPoints, List<Point> recentSelections) {
         if (recentSelections == null || recentSelections.isEmpty())
         {
-            return revealPoints.getFirst();
+            // Initialize recently selected point as up and to the right
+            // Usually safe for map
+            recentSelections = new ArrayList<>();
+            recentSelections.add(new Point(30, 40));
         }
 
         Point bestPoint = revealPoints.getFirst();
@@ -396,11 +460,16 @@ public class MapRunner
                 score = 1 / Math.abs(newAngle - previousAngle);
             }
             catch (Exception e) {
-                // Divide by zero. Want negative infinity score since this means it's in the same place as previous point. Stuck?
                 score = -1000;
             }
 
-            System.out.println("Point has score " + score + " at loc " + point.x + ", " + point.y);
+            // Punish it if recent selections contains the point
+            if (recentSelections.contains(point))
+            {
+                score = -1000;
+            }
+
+            System.out.println("\tPoint has score " + score + " at loc " + point.x + ", " + point.y);
             if (score > bestScore)
             {
                 bestPoint = point;
@@ -408,43 +477,13 @@ public class MapRunner
             }
         }
 
-        return bestPoint;
+        System.out.println("Previous points:");
+        for (Point point : recentSelections)
+        {
+            System.out.println("\t" + point.x + ", " + point.y);
+        }
+        System.out.println("Selected point " + bestPoint.x + ", " + bestPoint.y);
 
-//        for (int i = 0; i < revealPoints.size(); i++) {
-//            Point p = revealPoints.get(i);
-//
-//            // Score for being early in the list (higher score for earlier points)
-//            double listScore = LIST_POSITION_WEIGHT * (revealPoints.size() - i);
-//
-//            // Score based on proximity to recent selections
-//            double proximityScore = 0.0;
-//            int count = Math.min(6, recentSelections.size());
-//
-//            for (int j = 0; j < count; j++) {
-//                Point recent = recentSelections.get(recentSelections.size() - 1 - j);
-//                double distance = Legend.euclideanDistance(p, recent);
-//
-//                // If distance is too close, we might be stuck, so punish this point
-//                if (distance < 10) {
-//                    proximityScore = -100;
-//                    continue;
-//                }
-//
-//                // Inverse distance: closer = higher score (avoid div by zero)
-//                proximityScore += 1.0 / (distance + 1e-5);
-//            }
-//
-//            double totalScore = listScore + (DISTANCE_WEIGHT * proximityScore);
-//            System.out.printf("  List Score: %.2f, Proximity Score: %.5f, Total Score: %.5f%n",
-//                    listScore, proximityScore * DISTANCE_WEIGHT, totalScore);
-//            if (totalScore > bestScore) {
-//                bestScore = totalScore;
-//                bestPoint = p;
-//            }
-//        }
-//
-//        System.out.println();
-//
-//        return bestPoint;
+        return bestPoint;
     }
 }

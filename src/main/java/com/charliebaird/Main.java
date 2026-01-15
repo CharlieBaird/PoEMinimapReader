@@ -1,7 +1,9 @@
 package com.charliebaird;
 
+import com.TeensyBottingLib.Utility.SleepUtils;
 import com.charliebaird.Minimap.MinimapExtractor;
 import com.charliebaird.Minimap.MinimapVisuals;
+import com.charliebaird.PoEBot.LogTailer;
 import com.charliebaird.PoEBot.MapRunner;
 import com.charliebaird.PoEBot.ScreenScanner;
 import com.charliebaird.utility.ScreenCapture;
@@ -13,6 +15,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +31,19 @@ public class Main
 
     public static void main(String[] args)
     {
+        LogTailer.observe();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                Robot r = new Robot();
+                r.keyRelease(KeyEvent.VK_F4);
+                r.keyRelease(KeyEvent.VK_SHIFT);
+                r.keyRelease(KeyEvent.VK_CONTROL);
+                System.out.println("Safety: forcefully unpressed F4");
+            } catch (Exception ignored) {}
+        }));
+
+
         try {
             if (args.length != 1) {
                 String imagePath = "C:/Users/charl/Documents/dev/CB/PoE/MinimapReader/samples/minimap1.png";
@@ -38,12 +54,9 @@ public class Main
                 minimap.resolve(original);
                 Timer.stop();
                 minimap.saveFinalMinimap("final.png");
-            } else if (args[0].equals("-l")) {
+            }
+            else if (args[0].equals("-l")) {
                 MapRunner runner = new MapRunner();
-
-                runner.openMap();
-
-//            runner.executiveLoop(20);
                 runner.test();
 
                 runner.exitMap();
@@ -72,16 +85,17 @@ public class Main
                 Point portal = findPortal(original);
                 System.out.println(portal.x + " " + portal.y);
             } else if (args[0].equals("-r")) {
+
                 MapRunner runner = new MapRunner();
-
                 runner.openMap();
-
-                runner.executiveLoop(50);
-//            runner.test();
-
+                runner.executiveLoop(2);
                 runner.exitMap();
             }
-        } finally {
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        finally {
             MapRunner.cleanExit();
             System.exit(0);
         }

@@ -35,7 +35,7 @@ public class ScreenScanner implements Runnable
                 boolean influenceProc = scanForInfluenceProc(mat, iteration);
                 if (influenceProc)
                 {
-                    System.out.println("\tInfluence procced in iteration " + iteration);
+                    System.out.println("Influence procced in iteration " + iteration);
                     scanningForInfluence = false;
                     mapRunner.influenceDetected();
                 }
