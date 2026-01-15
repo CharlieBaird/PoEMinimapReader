@@ -7,10 +7,12 @@ import com.charliebaird.PoEBot.ScreenScanner;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,19 +40,19 @@ public class Main
             minimap.saveFinalMinimap("final.png");
         }
 
-//        else if (args[0].equals("-l"))
-//        {
-////            Timer.start();
-//            Mat original = ScreenCapture.captureScreenMat();
-////            Timer.stop();
-////
-////            Timer.start();
-//            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
-//            minimap.resolve(original);
-////            Timer.stop();
-//            minimap.saveFinalMinimap("final.png");
-////
-//        }
+        else if (args[0].equals("-l"))
+        {
+//            Timer.start();
+            Mat original = ScreenCapture.captureScreenMat();
+//            Timer.stop();
+//
+//            Timer.start();
+            MinimapExtractor minimap = new MinimapExtractor(writeToDisk);
+            minimap.resolve(original);
+//            Timer.stop();
+            minimap.saveFinalMinimap("final.png");
+//
+        }
 
         else if (args[0].equals("-l"))
         {
@@ -70,18 +72,17 @@ public class Main
 
         else if (args[0].equals("-r"))
         {
-            Timer.start();
             MapRunner runner = new MapRunner();
-            Timer.stop();
 
-            Timer.start();
             runner.openMap();
-            Timer.stop();
 
             runner.executiveLoop(20);
+//            runner.test();
 
             runner.exitMap();
         }
+
+        System.exit(0);
     }
 
 }

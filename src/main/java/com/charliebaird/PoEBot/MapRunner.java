@@ -9,9 +9,11 @@ import com.charliebaird.Minimap.MinimapVisuals;
 import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -19,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class MapRunner
 {
+    private final Robot utilRobot;
     private final PoEBot bot;
 
     private final MouseJiggler mouseJiggler;
@@ -33,6 +36,11 @@ public class MapRunner
     public MapRunner()
     {
         bot = new PoEBot();
+        try {
+            utilRobot = new Robot();
+        } catch (AWTException e) {
+            throw new RuntimeException(e);
+        }
 
         // Init mouse jiggler background thread, mimics human-like constant mouse jiggle
 
@@ -47,6 +55,36 @@ public class MapRunner
         screenScanner = new ScreenScanner(this);
         screenScannerThread = new Thread(screenScanner);
         screenScannerThread.start();
+    }
+
+    public void test()
+    {
+        Mat original = ScreenCapture.captureScreenMat();
+        MinimapExtractor minimap = new MinimapExtractor(true);
+        minimap.resolve(original);
+
+        List<Point> revealPoints = minimap.findRevealPoints();
+
+        if (revealPoints == null || revealPoints.isEmpty())
+        {
+            System.out.println("No reveal points found");
+            return;
+        }
+
+        Point point = findBestRevealPoint(revealPoints, recentSelections);
+        recentSelections.add(point);
+
+        if (point != null)
+        {
+            minimap.debugCircle("debug.png", new Scalar(255,200,200), point);
+
+            Point screenPoint = Legend.convertMinimapPointToScreen(point);
+
+            // todo move this to a separate thread?
+            bot.mouseMoveGeneralLocation(screenPoint, false);
+        }
+
+        minimap.saveFinalMinimap("final.png");
     }
 
     public void openMap() {}
@@ -77,6 +115,7 @@ public class MapRunner
             if (influenceDetected)
             {
                 break;
+
             }
         }
 
@@ -93,6 +132,22 @@ public class MapRunner
         SleepUtils.delayAround(250);
 
         portalOut();
+
+        // Wait for character to be on screen (no loading screen)
+        while (true)
+        {
+            if (utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
+            {
+                break;
+            }
+
+            SleepUtils.delayAround(250);
+        }
+
+        System.out.println("End of loading screen");
+        bot.mouseMoveGeneralLocation(new Point(950, 350), true);
+        SleepUtils.delayAround(800);
+        bot.mouseClick(MouseCode.LEFT, true);
     }
 
     public boolean portalOut()
@@ -137,7 +192,22 @@ public class MapRunner
 
         SleepUtils.delayAround(80);
 
-        bot.mouseClickOnceOrTwice(MouseCode.LEFT, true);
+        bot.mouseClick(MouseCode.LEFT, true);
+
+        for (int i=0; i<5; i++)
+        {
+            portalPoint = findPortal();
+
+            if (portalPoint == null) return true;
+
+            bot.mouseMoveGeneralLocation(portalPoint, false);
+
+            SleepUtils.delayAround(80);
+
+            bot.mouseClick(MouseCode.LEFT, true);
+
+            SleepUtils.delayAround(1500);
+        }
 
         return true;
     }
@@ -190,13 +260,17 @@ public class MapRunner
         return null;
     }
 
-    public void runMapLoop()
+    public void  runMapLoop()
     {
         Mat original = ScreenCapture.captureScreenMat();
+        Timer.start();
         MinimapExtractor minimap = new MinimapExtractor(true);
         minimap.resolve(original);
+        Timer.stop();
 
         List<Point> revealPoints = minimap.findRevealPoints();
+
+        minimap.saveFinalMinimap("iteration.png");
 
         if (revealPoints == null || revealPoints.isEmpty())
         {
@@ -209,10 +283,10 @@ public class MapRunner
 
         if (point != null)
         {
-            Point screenPoint = Legend.convertMinimapPointToScreen(point);
+             Point screenPoint = Legend.convertMinimapPointToScreen(point);
 
             // todo move this to a separate thread?
-            bot.mouseMoveGeneralLocation(screenPoint, true);
+            bot.mouseMoveGeneralLocation(screenPoint, false);
 
             // 1 in 5 chance
             if (ThreadLocalRandom.current().nextInt(1, 6) > 4)

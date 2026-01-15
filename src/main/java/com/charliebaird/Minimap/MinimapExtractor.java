@@ -384,6 +384,14 @@ public class MinimapExtractor
         writeMatToDisk(path, fullMinimap, writeToDisk);
     }
 
+    public void debugCircle(String path, Scalar scalar, Point p)
+    {
+        if (writeToDisk && p != null)
+        {
+            Imgproc.circle(fullMinimap, p, 16, scalar, -1);
+        }
+    }
+
     class ContourEdge implements Comparable<ContourEdge>
     {
         int i, j;
