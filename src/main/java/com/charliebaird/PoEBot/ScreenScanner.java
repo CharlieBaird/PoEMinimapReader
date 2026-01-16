@@ -5,8 +5,10 @@ import com.charliebaird.utility.ScreenCapture;
 import com.charliebaird.utility.Timer;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.charliebaird.Minimap.MinimapVisuals.writeMatToDisk;
 
@@ -28,11 +30,13 @@ public class ScreenScanner implements Runnable
         while (running) {
             iteration++;
 
-            Mat mat = ScreenCapture.captureScreenMat();
+            // todo veryify this should be fullscreen
+            Mat original = ScreenCapture.captureFullscreenMat();
+            Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
 
             if (scanningForInfluence)
             {
-                boolean influenceProc = scanForInfluenceProc(mat, iteration);
+                boolean influenceProc = scanForInfluenceProc(original, iteration);
                 if (influenceProc)
                 {
                     System.out.println("Influence procced in iteration " + iteration);
@@ -40,7 +44,7 @@ public class ScreenScanner implements Runnable
                     mapRunner.influenceDetected();
                 }
 
-                writeMatToDisk("influence_scan/scanner" + iteration + ".png", mat, true);
+                writeMatToDisk("influence_scan/scanner" + iteration + ".png", original, true);
             }
         }
     }
@@ -53,8 +57,6 @@ public class ScreenScanner implements Runnable
     public static final boolean CHECK_FOR_EATER = true;
     public static boolean scanForInfluenceProc(Mat original, int iteration)
     {
-        Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
-
         if (CHECK_FOR_EATER)
         {
             Mat eaterInfluenceFilter = applyHSVFilter(original, 90, 111, 159, 97, 231, 255);
@@ -75,6 +77,11 @@ public class ScreenScanner implements Runnable
 
     public static Mat applyHSVFilter(Mat original, int hMin, int sMin, int vMin, int hMax, int sMax, int vMax)
     {
+        return applyHSVFilter(original, hMin, sMin, vMin, hMax, sMax, vMax, true);
+    }
+
+    public static Mat applyHSVFilter(Mat original, int hMin, int sMin, int vMin, int hMax, int sMax, int vMax, boolean makeBinary)
+    {
         Mat hsv = new Mat();
         Imgproc.cvtColor(original, hsv, Imgproc.COLOR_BGR2HSV);
 
@@ -85,15 +92,19 @@ public class ScreenScanner implements Runnable
         Mat colorMask = new Mat();
         Core.inRange(hsv, lowerBound, upperBound, colorMask);
 
-        // Create mask for non-black pixels in the original BGR image
-        Mat blackMask = new Mat();
-        Core.inRange(original, new Scalar(1, 1, 1), new Scalar(255, 255, 255), blackMask); // non-black
+        if (makeBinary)
+        {
+            // Create mask for non-black pixels in the original BGR image
+            Mat blackMask = new Mat();
+            Core.inRange(original, new Scalar(1, 1, 1), new Scalar(255, 255, 255), blackMask); // non-black
 
-        // Combine the two masks
-        Mat combinedMask = new Mat();
-        Core.bitwise_and(colorMask, blackMask, combinedMask);
+            Mat combinedMask = new Mat();
+            Core.bitwise_and(colorMask, blackMask, combinedMask);
 
-        return combinedMask;
+            return combinedMask;
+        }
+
+        return colorMask;
     }
 
     // Gets the percentage of non-zero pixels in the MASKED mat out of the total
@@ -214,5 +225,99 @@ public class ScreenScanner implements Runnable
         centroids.release();
 
         return results;
+    }
+
+    public static ArrayList<Point> scanMatForItems(Mat original)
+    {
+        // First scan for green objects using HSV filter
+        Mat mask = ScreenScanner.applyHSVFilter(original, 60, 254, 254, 61, 255, 255, false);
+        MinimapVisuals.writeMatToDisk("filtered.png", mask);
+
+        // Clean up some noise
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
+        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
+
+        // Contour filtered mat and find center of contours
+        // Find contours
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Filter by larger ones
+        List<MatOfPoint> filteredContours = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            if (Imgproc.contourArea(contour) >= 10) {
+                filteredContours.add(contour);
+            }
+        }
+
+        // For each contour, find it's "center"
+        ArrayList<Point> itemPointsOnScreen = new ArrayList<>();
+        for (MatOfPoint contour : filteredContours) {
+            Moments moments = Imgproc.moments(contour);
+            int cx = (int)(moments.get_m10() / moments.get_m00());
+            int cy = (int)(moments.get_m01() / moments.get_m00());
+            Point center = new Point(cx * 4, cy * 4);
+            itemPointsOnScreen.add(center);
+        }
+
+        return itemPointsOnScreen;
+    }
+
+    public static ArrayList<Point> scanMatForMinimapItems(Mat original)
+    {
+        // First scan for green objects using HSV filter
+        Mat mask = ScreenScanner.applyHSVFilter(original, 150,30,117,158,203,255, false);
+
+        // Clean up some noise
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2, 2));
+        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
+
+        MinimapVisuals.writeMatToDisk("filtered.png", mask);
+
+        // Contour filtered mat and find center of contours
+        // Find contours
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Filter by larger ones
+        List<MatOfPoint> filteredContours = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            if (Imgproc.contourArea(contour) >= 10) {
+                filteredContours.add(contour);
+            }
+        }
+
+        // For each contour, find it's "center"
+        ArrayList<Point> itemPointsOnScreen = new ArrayList<>();
+        for (MatOfPoint contour : filteredContours) {
+            Moments moments = Imgproc.moments(contour);
+            int cx = (int)(moments.get_m10() / moments.get_m00());
+            int cy = (int)(moments.get_m01() / moments.get_m00());
+
+            // Expand to 1920x1080p, convert to vector form
+            cx *= 4; cy *= 4;
+            cx -= 960; cy -= 540;
+
+            // Project to 300 pixels from origin
+            double length = Math.sqrt(cx * cx + cy * cy);
+            double px; double py;
+
+            if (length == 0) {
+                // origin stays origin — or handle however you want
+                px = 960;
+                py = 540;
+            } else {
+                double scale = 300.0 / length;
+                px = cx * scale + 960;
+                py = cy * scale + 540;
+            }
+
+            Point center = new Point(px, py);
+            itemPointsOnScreen.add(center);
+        }
+
+        return itemPointsOnScreen;
     }
 }

@@ -38,30 +38,7 @@ public class MapRunner
 
     public static MapRunner runnerSingleton;
 
-    public static void cleanExit()
-    {
-        boolean lShiftDown =
-                (User32.INSTANCE.GetAsyncKeyState(0xA0) & 0x8000) != 0; // VK_LSHIFT
-
-        if (lShiftDown) {
-            runnerSingleton.bot.keyRelease(KeyCode.LSHIFT, false);
-        }
-
-        boolean lCtrlDown =
-                (User32.INSTANCE.GetAsyncKeyState(0xA2) & 0x8000) != 0; // VK_LCONTROL
-
-        if (lCtrlDown) {
-            runnerSingleton.bot.keyRelease(KeyCode.LCTRL, false);
-        }
-
-        Robot r = null;
-        try {
-            r = new Robot();
-        } catch (AWTException e) {
-            throw new RuntimeException(e);
-        }
-        r.keyRelease(KeyEvent.VK_F4);
-    }
+    public static boolean PAUSE_FLAG = false;
 
     public MapRunner()
     {
@@ -82,11 +59,11 @@ public class MapRunner
 
     public void test()
     {
-        Mat original = ScreenCapture.captureScreenMat();
         Timer.start();
-        MinimapExtractor minimap = new MinimapExtractor(true);
-        minimap.resolve(original);
-        minimap.saveFinalMinimap("test.png");
+        Mat original = ScreenCapture.captureFullscreenMat();
+        Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
+        ArrayList<Point> points = ScreenScanner.scanMatForItems(original);
+        ArrayList<Point> minimapPoints = ScreenScanner.scanMatForMinimapItems(original);
         Timer.stop();
     }
 
@@ -164,7 +141,11 @@ public class MapRunner
                     break;
                 }
             }
-        } finally {
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
             bot.keyRelease(KeyCode.F4, true);
             intermittentAttacker.stop();
             screenScanner.stop();
@@ -255,18 +236,122 @@ public class MapRunner
 
         // Sleep until map is entered
         SleepUtils.delayAround(2000);
-        while (true)
-        {
-            if (utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
-            {
-                break;
-            }
+        while (!utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39))) {
 
             SleepUtils.delayAround(250);
         }
 
         // Repeat cycle
         return true;
+    }
+
+    public boolean inMapLoop(int iteration)
+    {
+        System.out.println("(" + iteration + "): In map loop");
+
+        List<Point> revealPoints = new ArrayList<>();
+
+        for (int i=0; i<5; i++)
+        {
+            // Safety check, is escape open? Or not in instance?
+            if (!utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
+            {
+                System.out.println("Escape open, quitting");
+                return false;
+            }
+
+            Mat original = ScreenCapture.captureScreenMat();
+            Timer.start();
+            MinimapExtractor minimap = new MinimapExtractor(true);
+            minimap.resolve(original);
+            minimap.saveFinalMinimap("iteration " + iteration + ".png");
+            Timer.stop(iteration);
+
+            revealPoints = minimap.findRevealPoints();
+
+            if (revealPoints == null || revealPoints.isEmpty())
+            {
+                System.out.println("No reveal points found in sub-iteration " + i);
+                SleepUtils.delayAround(300);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        checkForItemDrops(iteration);
+
+        // If went in loop, can cancel this now
+        if (PAUSE_FLAG)
+        {
+            PAUSE_FLAG = false;
+            bot.keyPress(KeyCode.F4, true);
+        }
+
+        Point point = findBestRevealPoint(revealPoints, recentSelections);
+        recentSelections.add(point);
+        if (recentSelections.size() > 10)
+        {
+            recentSelections.removeFirst();
+        }
+
+        if (point != null)
+        {
+            Point screenPoint = Legend.convertMinimapPointToScreen(point);
+            bot.mouseMoveGeneralLocation(screenPoint, false);
+
+            // 1 in 5 chance
+            if (ThreadLocalRandom.current().nextInt(1, 8) == 1)
+            {
+                bot.keyClick(KeyCode.SPACE, true);
+            }
+        }
+
+        bot.keyPress(KeyCode.F4, true);
+
+        return true;
+    }
+
+    public void checkForItemDrops(int iteration)
+    {
+        // Check if any items on the ground
+        Mat original = ScreenCapture.captureFullscreenMat();
+        Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
+        ArrayList<Point> points = ScreenScanner.scanMatForItems(original);
+        ArrayList<Point> minimapPoints = ScreenScanner.scanMatForMinimapItems(original);
+        while (!points.isEmpty() || !minimapPoints.isEmpty())
+        {
+            PAUSE_FLAG = true;
+            bot.keyRelease(KeyCode.F4, false);
+
+            SleepUtils.delayAround(2500);
+
+            if (!points.isEmpty())
+            {
+                System.out.println("Found item on ground, going to pick it up");
+                bot.mouseMoveGeneralLocation(points.getFirst(), false);
+                SleepUtils.delayAround(100);
+                bot.mouseClick(MouseCode.LEFT, false);
+                SleepUtils.delayAround(1500);
+            }
+            else
+            {
+                // If here, that means that no visible items on ground but minimap says there are
+                System.out.println("Found item on ground via minimap, routing towards it");
+                bot.mouseMoveGeneralLocation(minimapPoints.getFirst(), false);
+                SleepUtils.delayAround(100);
+                bot.mouseClick(MouseCode.LEFT, false);
+                bot.keyClickForDuration(KeyCode.F4, 400, 600, true);
+
+                SleepUtils.delayAround(1500);
+            }
+
+            original = ScreenCapture.captureFullscreenMat();
+            Imgproc.resize(original, original, new Size(original.width() / 4, original.height() / 4));
+            points = ScreenScanner.scanMatForItems(original);
+            minimapPoints = ScreenScanner.scanMatForMinimapItems(original);
+        }
     }
 
     public boolean portalOut()
@@ -400,70 +485,6 @@ public class MapRunner
         return null;
     }
 
-    public boolean inMapLoop(int iteration)
-    {
-        System.out.println("(" + iteration + "): In map loop");
-
-        List<Point> revealPoints = new ArrayList<>();
-
-        for (int i=0; i<5; i++)
-        {
-            // Safety check, is escape open? Or not in instance?
-            if (!utilRobot.getPixelColor(230, 1021).equals(new Color(36, 36, 39)))
-            {
-                System.out.println("Escape open, quitting");
-                return false;
-            }
-
-            Mat original = ScreenCapture.captureScreenMat();
-            Timer.start();
-            MinimapExtractor minimap = new MinimapExtractor(true);
-            minimap.resolve(original);
-            minimap.saveFinalMinimap("iteration " + iteration + ".png");
-            Timer.stop(iteration);
-
-            revealPoints = minimap.findRevealPoints();
-
-            minimap.saveFinalMinimap("iteration.png");
-
-            if (revealPoints == null || revealPoints.isEmpty())
-            {
-                System.out.println("No reveal points found in sub-iteration " + i);
-                SleepUtils.delayAround(300);
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        Point point = findBestRevealPoint(revealPoints, recentSelections);
-        recentSelections.add(point);
-        if (recentSelections.size() > 10)
-        {
-            recentSelections.removeFirst();
-        }
-
-        if (point != null)
-        {
-            Point screenPoint = Legend.convertMinimapPointToScreen(point);
-            bot.mouseMoveGeneralLocation(screenPoint, false);
-
-            // 1 in 5 chance
-            if (ThreadLocalRandom.current().nextInt(1, 8) == 1)
-            {
-                bot.keyClick(KeyCode.SPACE, true);
-            }
-        }
-
-        if (iteration == 0)
-        {
-            bot.keyPress(KeyCode.F4, true);
-        }
-
-        return true;
-    }
-
     private final List<Point> recentSelections = new ArrayList<Point>();
     public static Point findBestRevealPoint(List<Point> revealPoints, List<Point> recentSelections) {
         if (recentSelections == null || recentSelections.isEmpty())
@@ -514,5 +535,30 @@ public class MapRunner
         System.out.println("Selected point " + bestPoint.x + ", " + bestPoint.y);
 
         return bestPoint;
+    }
+
+    public static void cleanExit()
+    {
+        boolean lShiftDown =
+                (User32.INSTANCE.GetAsyncKeyState(0xA0) & 0x8000) != 0; // VK_LSHIFT
+
+        if (lShiftDown) {
+            runnerSingleton.bot.keyRelease(KeyCode.LSHIFT, false);
+        }
+
+        boolean lCtrlDown =
+                (User32.INSTANCE.GetAsyncKeyState(0xA2) & 0x8000) != 0; // VK_LCONTROL
+
+        if (lCtrlDown) {
+            runnerSingleton.bot.keyRelease(KeyCode.LCTRL, false);
+        }
+
+        Robot r = null;
+        try {
+            r = new Robot();
+        } catch (AWTException e) {
+            throw new RuntimeException(e);
+        }
+        r.keyRelease(KeyEvent.VK_F4);
     }
 }
